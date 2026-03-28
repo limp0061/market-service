@@ -4,7 +4,8 @@ public interface BaseEnum {
 
     String getCode();
 
-    default String getDescription() {
+    default String getDesc() {
         return "";
     }
+
 }

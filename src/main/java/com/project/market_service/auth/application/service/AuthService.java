@@ -1,0 +1,117 @@
+package com.project.market_service.auth.application.service;
+
+import static com.project.market_service.common.constants.AuthConstants.TOKEN_LOG_OUT;
+import static com.project.market_service.common.constants.RedisConstants.BLACKLIST_TOKEN_PREFIX;
+import static com.project.market_service.common.constants.RedisConstants.REFRESH_TOKEN_PREFIX;
+
+import com.project.market_service.auth.exception.AuthErrorCode;
+import com.project.market_service.auth.presentation.dto.LoginRequest;
+import com.project.market_service.auth.presentation.dto.LoginResponse;
+import com.project.market_service.auth.presentation.dto.SignUpRequest;
+import com.project.market_service.auth.presentation.dto.SignUpResponse;
+import com.project.market_service.auth.presentation.dto.TokenResponse;
+import com.project.market_service.common.exception.EntityNotFoundException;
+import com.project.market_service.common.exception.UnAuthorizationException;
+import com.project.market_service.common.redis.RedisManager;
+import com.project.market_service.common.security.jwt.JwtProvider;
+import com.project.market_service.common.security.jwt.JwtUserInfo;
+import com.project.market_service.user.application.sevice.UserValidator;
+import com.project.market_service.user.domain.User;
+import com.project.market_service.user.domain.UserErrorCode;
+import com.project.market_service.user.domain.UserRepository;
+import java.util.concurrent.TimeUnit;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class AuthService {
+
+    private final UserValidator userValidator;
+    private final PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+    private final JwtProvider jwtProvider;
+    private final RedisManager redisManager;
+
+    @Transactional
+    public SignUpResponse signUp(SignUpRequest request) {
+        userValidator.validateDuplicate(request.loginId());
+
+        String encodedPassword = passwordEncoder.encode(request.password());
+
+        User user = User.signUp(
+                request.userName(),
+                request.loginId(),
+                encodedPassword
+        );
+
+        User savedUser = userRepository.save(user);
+
+        return SignUpResponse.from(savedUser);
+    }
+
+    public LoginResponse userLogin(LoginRequest request) {
+        User user = userRepository.findByLoginId(request.loginId())
+                .orElseThrow(() -> new UnAuthorizationException(AuthErrorCode.LOGIN_FAILED));
+
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+            throw new UnAuthorizationException(AuthErrorCode.LOGIN_FAILED);
+        }
+
+        String accessToken = jwtProvider.createAccessToken(user.getId(), user.getLoginId(), user.getUserRole());
+        String refreshToken = jwtProvider.createRefreshToken(user.getId());
+
+        redisManager.set(
+                REFRESH_TOKEN_PREFIX + user.getId(),
+                refreshToken,
+                jwtProvider.getRefreshExpiration(),
+                TimeUnit.MILLISECONDS
+        );
+
+        return new LoginResponse(user.getId(), user.getLoginId(), accessToken, refreshToken);
+    }
+
+    public TokenResponse reissue(String token) {
+        if (!StringUtils.hasText(token)) {
+            throw new UnAuthorizationException(AuthErrorCode.TOKEN_NOT_FOUND);
+        }
+
+        JwtUserInfo userInfo = jwtProvider.getUserInfo(token);
+        Long userId = userInfo.userId();
+
+        String refreshToken = redisManager.get(REFRESH_TOKEN_PREFIX + userId, String.class);
+        if (!StringUtils.hasText(refreshToken) || !refreshToken.equals(token)) {
+            throw new UnAuthorizationException(AuthErrorCode.INVALID_TOKEN);
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException(UserErrorCode.USER_NOT_FOUND));
+
+        String newAccessToken = jwtProvider.createAccessToken(user.getId(), user.getLoginId(), user.getUserRole());
+        String newRefreshToken = jwtProvider.createRefreshToken(user.getId());
+        redisManager.set(
+                REFRESH_TOKEN_PREFIX + user.getId(),
+                newRefreshToken,
+                jwtProvider.getRefreshExpiration(),
+                TimeUnit.MILLISECONDS
+        );
+
+        return new TokenResponse(newAccessToken, newRefreshToken);
+    }
+
+    public void logout(Long userId, String accessToken) {
+        redisManager.delete(REFRESH_TOKEN_PREFIX + userId);
+
+        if (StringUtils.hasText(accessToken)) {
+            redisManager.set(
+                    BLACKLIST_TOKEN_PREFIX + accessToken,
+                    TOKEN_LOG_OUT,
+                    jwtProvider.remainExpiration(accessToken),
+                    TimeUnit.MILLISECONDS);
+        }
+    }
+}

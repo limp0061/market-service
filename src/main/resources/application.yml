@@ -22,7 +22,6 @@ spring:
       host: localhost
       port: 16379
 
-
 springdoc:
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
@@ -32,3 +31,8 @@ springdoc:
     display-request-duration: true
   api-docs:
     path: /api-docs
+
+jwt:
+  secret: ${JWT_SECRET:vms60293845701234567890123456789012}
+  access-expiration: 1800000    # 30분
+  refresh-expiration: 604800000 # 7일
