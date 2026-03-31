@@ -14,7 +14,6 @@ import com.project.market_service.common.exception.EntityNotFoundException;
 import com.project.market_service.common.exception.UnAuthorizationException;
 import com.project.market_service.common.redis.RedisManager;
 import com.project.market_service.common.security.jwt.JwtProvider;
-import com.project.market_service.common.security.jwt.JwtUserInfo;
 import com.project.market_service.user.application.sevice.UserValidator;
 import com.project.market_service.user.domain.User;
 import com.project.market_service.user.domain.UserErrorCode;
@@ -80,8 +79,7 @@ public class AuthService {
             throw new UnAuthorizationException(AuthErrorCode.TOKEN_NOT_FOUND);
         }
 
-        JwtUserInfo userInfo = jwtProvider.getUserInfo(token);
-        Long userId = userInfo.userId();
+        Long userId = jwtProvider.getUserId(token);
 
         String refreshToken = redisManager.get(REFRESH_TOKEN_PREFIX + userId, String.class);
         if (!StringUtils.hasText(refreshToken) || !refreshToken.equals(token)) {

@@ -89,6 +89,23 @@ public class JwtProvider {
         }
     }
 
+    public Long getUserId(String token) {
+        try {
+            Claims claims = getClaimsFromToken(token);
+            String subject = claims.getSubject();
+
+            if (subject == null) {
+                throw new UnAuthorizationException(AuthErrorCode.INVALID_TOKEN);
+            }
+
+            return Long.parseLong(subject);
+        } catch (ExpiredJwtException e) {
+            throw new UnAuthorizationException(AuthErrorCode.TOKEN_EXPIRED);
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new UnAuthorizationException(AuthErrorCode.INVALID_TOKEN);
+        }
+    }
+
     public long remainExpiration(String token) {
         Instant expiration = getClaimsFromToken(token).getExpiration().toInstant();
         return Math.max(expiration.toEpochMilli() - System.currentTimeMillis(), 0);
