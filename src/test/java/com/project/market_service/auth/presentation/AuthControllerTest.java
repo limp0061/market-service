@@ -7,10 +7,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
+import com.project.market_service.auth.exception.AuthErrorCode;
 import com.project.market_service.auth.presentation.dto.LoginRequest;
 import com.project.market_service.auth.presentation.dto.SignUpRequest;
 import com.project.market_service.config.TestRedisConfig;
 import com.project.market_service.user.domain.User;
+import com.project.market_service.user.domain.UserErrorCode;
 import com.project.market_service.user.domain.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -74,6 +76,7 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(request))
                 ).andExpect(status().isConflict())
                 .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value(UserErrorCode.DUPLICATE_LOGIN_ID.name()))
                 .andDo(print());
     }
 
@@ -102,6 +105,7 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value(AuthErrorCode.LOGIN_FAILED.name()))
                 .andDo(print());
     }
 
