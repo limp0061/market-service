@@ -2,6 +2,11 @@ spring:
   application:
     name: market-service
 
+  profiles:
+    include:
+      - secret
+      - storage
+
   datasource:
     url: jdbc:mysql://localhost:13306/marketdb?serverTimezone=Asia/Seoul
     username: root
