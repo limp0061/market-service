@@ -62,4 +62,8 @@ public class Category extends BaseEntity {
     private Category(String name) {
         this.name = name;
     }
+
+    public void updateName(String name) {
+        this.name = name;
+    }
 }
