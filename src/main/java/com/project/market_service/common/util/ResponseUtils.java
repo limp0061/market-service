@@ -1,4 +1,4 @@
-package com.project.market_service.common.utils;
+package com.project.market_service.common.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.market_service.common.dto.ApiResult;

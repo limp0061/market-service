@@ -1,7 +1,7 @@
 package com.project.market_service.common.security.jwt;
 
 import static com.project.market_service.common.constants.RedisConstants.BLACKLIST_TOKEN_PREFIX;
-import static com.project.market_service.common.utils.ResponseUtils.sendError;
+import static com.project.market_service.common.util.ResponseUtils.sendError;
 
 import com.project.market_service.auth.exception.AuthErrorCode;
 import com.project.market_service.common.exception.BusinessException;
