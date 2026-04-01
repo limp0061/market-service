@@ -28,7 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 @AutoConfigureMockMvc
 @SpringBootTest
 @Transactional
-class CategoryControllerTest {
+class CategoryControllerIntegrationTest {
 
     @Autowired
     MockMvc mockMvc;

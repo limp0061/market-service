@@ -31,7 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 @AutoConfigureMockMvc
 @Import(TestRedisConfig.class)
 @Transactional
-class AuthControllerTest {
+class AuthControllerIntegrationTest {
 
     @Autowired
     MockMvc mockMvc;
