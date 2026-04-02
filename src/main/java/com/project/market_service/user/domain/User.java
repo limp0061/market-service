@@ -39,7 +39,8 @@ public class User extends BaseEntity {
     private UserRole userRole;
 
     @Builder
-    public User(String name, String loginId, String password, UserRole userRole) {
+    public User(Long id, String name, String loginId, String password, UserRole userRole) {
+        this.id = id;
         this.name = name;
         this.loginId = loginId;
         this.password = password;
@@ -52,6 +53,15 @@ public class User extends BaseEntity {
                 .loginId(loginId)
                 .password(encodedPassword)
                 .userRole(UserRole.USER)
+                .build();
+    }
+
+    public static User signUpAdmin(String userName, String loginId, String encodedPassword) {
+        return User.builder()
+                .name(userName)
+                .loginId(loginId)
+                .password(encodedPassword)
+                .userRole(UserRole.ADMIN)
                 .build();
     }
 }

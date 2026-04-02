@@ -30,7 +30,7 @@ public class ProductImage extends BaseTimeEntity {
     @JoinColumn(name = "product_id")
     private Product product;
 
-    @Column(nullable = false, length = 500)
+    @Column(nullable = false, length = 1000)
     private String imageUrl;
 
     private int sortOrder;

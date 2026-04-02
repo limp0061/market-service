@@ -41,6 +41,6 @@ public class FileService {
         String filename = fileValidator.normalizeFilename(file.getOriginalFilename());
         String today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
 
-        return PRODUCT_PATH + today + "/" + filename;
+        return PRODUCT_PATH + "/" + today + "/" + filename;
     }
 }

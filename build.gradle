@@ -56,6 +56,12 @@ dependencies {
     ===============*/
     implementation 'software.amazon.awssdk:s3:2.41.23'
 
+    // 공간 정보(Spatial) 및 위치 기반 서비스(LBS)
+    implementation 'org.hibernate.orm:hibernate-spatial'
+
+    // 위경도 좌표 계산 및 기하학적 객체(Geometry) 표준 라이브러리
+    implementation 'org.locationtech.jts:jts-core:1.20.0'
+
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'com.mysql:mysql-connector-j'

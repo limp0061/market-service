@@ -4,4 +4,4 @@ cloudflare:
     bucket: 'market-service'
     access-key: ${R2_ACCESS_KEY}
     secret-key: ${R2_SECRET_KEY}
-    public-url: 'https://pub-04de91f2b9e84f0d9cc88fb2bcddf737.r2.dev'
+    public-url: 'https://pub-4a2d05f343134d04b22f1b727d23e326.r2.dev'

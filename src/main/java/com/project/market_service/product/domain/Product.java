@@ -1,7 +1,11 @@
 package com.project.market_service.product.domain;
 
+import com.project.market_service.auth.exception.AuthErrorCode;
 import com.project.market_service.category.domain.Category;
 import com.project.market_service.common.domain.BaseEntity;
+import com.project.market_service.common.exception.InvalidStateException;
+import com.project.market_service.common.exception.UnAuthorizationException;
+import com.project.market_service.product.exception.ProductErrorCode;
 import com.project.market_service.user.domain.User;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -23,6 +27,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.locationtech.jts.geom.Point;
 
 @Getter
 @Entity
@@ -62,9 +67,11 @@ public class Product extends BaseEntity {
     @Column(nullable = false)
     private int wishCount = 0;
 
-    private Double lat;
+    @Column(nullable = false, columnDefinition = "POINT SRID 4326")
+    private Point location;
 
-    private Double lng;
+    @Column(nullable = false)
+    private String address;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductImage> images = new ArrayList<>();
@@ -74,8 +81,10 @@ public class Product extends BaseEntity {
         productImage.setProduct(this);
     }
 
-    public static Product create(User user, Category category, String name, String description,
-                                 BigDecimal price, ProductStatus status, List<String> imageUrls
+    public static Product create(
+            User user, Category category, String name,
+            String description, BigDecimal price,
+            List<String> imageUrls, Point location, String address
     ) {
         Product product = Product.builder()
                 .user(user)
@@ -83,7 +92,10 @@ public class Product extends BaseEntity {
                 .name(name)
                 .description(description)
                 .price(price)
-                .status(status).build();
+                .status(ProductStatus.SELLING)
+                .location(location)
+                .address(address)
+                .build();
 
         product.initImages(imageUrls);
         return product;
@@ -100,9 +112,10 @@ public class Product extends BaseEntity {
     }
 
     @Builder
-    private Product(User user, Category category, String name, String description,
-                    BigDecimal price, ProductStatus status
+    private Product(Long id, User user, Category category, String name, String description,
+                    BigDecimal price, ProductStatus status, Point location, String address
     ) {
+        this.id = id;
         this.user = user;
         this.category = category;
         this.name = name;
@@ -111,5 +124,67 @@ public class Product extends BaseEntity {
         this.status = status;
         this.viewCount = 0;
         this.wishCount = 0;
+        this.location = location;
+        this.address = address;
+    }
+
+    public void updateCategory(Category category, String name, String description, BigDecimal price,
+                               List<String> imageUrls, Point location, String address
+    ) {
+        this.category = category;
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.location = location;
+        this.address = address;
+
+        if (imageUrls != null) {
+            this.images.clear();
+            for (int i = 0; i < imageUrls.size(); i++) {
+                this.addProductImage(ProductImage.create(imageUrls.get(i), i));
+            }
+        }
+    }
+
+    public void clearImages() {
+        this.images.clear();
+    }
+
+    public void validateUpdatable() {
+        if (status == ProductStatus.DELETED) {
+            throw new InvalidStateException(ProductErrorCode.ALREADY_DELETED);
+        }
+
+        if (status != ProductStatus.SELLING && status != ProductStatus.INACTIVE) {
+            throw new InvalidStateException(ProductErrorCode.INVALID_PRODUCT_STATE);
+        }
+    }
+
+    public void validateDeletable() {
+        if (!status.canUpdateState(ProductStatus.DELETED)) {
+            throw new InvalidStateException(ProductErrorCode.INVALID_PRODUCT_STATE);
+        }
+    }
+
+    public void changeStatus(ProductStatus newStatus) {
+        if (!this.status.canUpdateState(newStatus)) {
+            throw new InvalidStateException(ProductErrorCode.INVALID_PRODUCT_STATE);
+        }
+        this.status = newStatus;
+    }
+
+    public void validateOwner(Long userId) {
+        if (!this.user.getId().equals(userId)) {
+            throw new UnAuthorizationException(AuthErrorCode.AUTH_FORBIDDEN);
+        }
+    }
+
+    public void softDelete() {
+        super.softDelete();
+        this.status = ProductStatus.DELETED;
+    }
+
+    public void increaseViewCount() {
+        this.viewCount++;
     }
 }

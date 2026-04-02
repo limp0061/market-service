@@ -1,0 +1,1 @@
+CREATE SPATIAL INDEX idx_product_location ON products(location);
