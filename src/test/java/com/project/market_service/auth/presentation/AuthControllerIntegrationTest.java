@@ -5,11 +5,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import com.project.market_service.auth.exception.AuthErrorCode;
 import com.project.market_service.auth.presentation.dto.LoginRequest;
 import com.project.market_service.auth.presentation.dto.SignUpRequest;
+import com.project.market_service.config.IntegrationTestBase;
 import com.project.market_service.config.TestRedisConfig;
 import com.project.market_service.user.domain.User;
 import com.project.market_service.user.domain.UserErrorCode;
@@ -18,25 +18,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.transaction.annotation.Transactional;
 
-@SpringBootTest
-@AutoConfigureMockMvc
 @Import(TestRedisConfig.class)
-@Transactional
-class AuthControllerIntegrationTest {
+class AuthControllerIntegrationTest extends IntegrationTestBase {
 
-    @Autowired
-    MockMvc mockMvc;
-    @Autowired
-    ObjectMapper objectMapper;
     @Autowired
     UserRepository userRepository;
     @Autowired
