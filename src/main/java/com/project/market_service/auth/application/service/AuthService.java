@@ -20,11 +20,13 @@ import com.project.market_service.user.domain.UserErrorCode;
 import com.project.market_service.user.domain.UserRepository;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -50,15 +52,17 @@ public class AuthService {
 
         User savedUser = userRepository.save(user);
 
+        log.info("[SignUp Success] New User Create. ID: {}, LoginId: {}", savedUser.getId(), savedUser.getLoginId());
         return SignUpResponse.from(savedUser);
     }
 
     public LoginResponse userLogin(LoginRequest request) {
         User user = userRepository.findByLoginId(request.loginId())
-                .orElseThrow(() -> new UnAuthorizationException(AuthErrorCode.LOGIN_FAILED));
+                .orElseThrow(() ->
+                        new UnAuthorizationException(AuthErrorCode.LOGIN_FAILED, "LoginId: " + request.loginId()));
 
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-            throw new UnAuthorizationException(AuthErrorCode.LOGIN_FAILED);
+            throw new UnAuthorizationException(AuthErrorCode.LOGIN_FAILED, "LoginId: " + request.loginId());
         }
 
         String accessToken = jwtProvider.createAccessToken(user.getId(), user.getLoginId(), user.getUserRole());
@@ -71,23 +75,25 @@ public class AuthService {
                 TimeUnit.MILLISECONDS
         );
 
+        log.info("[Login Success] User: {}", user.getLoginId());
         return new LoginResponse(user.getId(), user.getLoginId(), accessToken, refreshToken);
     }
 
     public TokenResponse reissue(String token) {
         if (!StringUtils.hasText(token)) {
-            throw new UnAuthorizationException(AuthErrorCode.TOKEN_NOT_FOUND);
+            throw new UnAuthorizationException(AuthErrorCode.TOKEN_NOT_FOUND, "Token: " + token);
         }
 
         Long userId = jwtProvider.getUserId(token);
 
         String refreshToken = redisManager.get(REFRESH_TOKEN_PREFIX + userId, String.class);
         if (!StringUtils.hasText(refreshToken) || !refreshToken.equals(token)) {
-            throw new UnAuthorizationException(AuthErrorCode.INVALID_TOKEN);
+            throw new UnAuthorizationException(AuthErrorCode.INVALID_TOKEN, "UserId: " + userId);
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException(UserErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() ->
+                        new EntityNotFoundException(UserErrorCode.USER_NOT_FOUND, "UserId: " + userId));
 
         String newAccessToken = jwtProvider.createAccessToken(user.getId(), user.getLoginId(), user.getUserRole());
         String newRefreshToken = jwtProvider.createRefreshToken(user.getId());
@@ -98,6 +104,7 @@ public class AuthService {
                 TimeUnit.MILLISECONDS
         );
 
+        log.info("[Reissue Token Success] Token rotated for UserId: {}", user.getId());
         return new TokenResponse(newAccessToken, newRefreshToken);
     }
 
@@ -111,5 +118,7 @@ public class AuthService {
                     jwtProvider.remainExpiration(accessToken),
                     TimeUnit.MILLISECONDS);
         }
+
+        log.info("[Logout Success] UserId: {}", userId);
     }
 }

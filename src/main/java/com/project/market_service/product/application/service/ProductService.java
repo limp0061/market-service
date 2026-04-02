@@ -26,6 +26,7 @@ import com.project.market_service.user.domain.UserRepository;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Point;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -33,6 +34,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -51,10 +53,11 @@ public class ProductService {
             Long userId
     ) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException(UserErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new EntityNotFoundException(UserErrorCode.USER_NOT_FOUND, "userId: " + userId));
 
         Category category = categoryRepository.findById(request.categoryId())
-                .orElseThrow(() -> new EntityNotFoundException(CategoryErrorCode.CATEGORY_NOT_FOUND));
+                .orElseThrow(() -> new EntityNotFoundException(CategoryErrorCode.CATEGORY_NOT_FOUND,
+                        "categoryId: " + request.categoryId()));
 
         List<String> imageUrls = (images == null || images.isEmpty())
                 ? List.of()
@@ -70,6 +73,7 @@ public class ProductService {
 
         Product savedProduct = productRepository.save(product);
 
+        log.info("[Product Save Success] ProductId: {}, ProductName: {}", savedProduct.getId(), product.getName());
         return ProductSaveResponse.from(savedProduct);
     }
 
@@ -79,7 +83,9 @@ public class ProductService {
             List<MultipartFile> images, Long userId
     ) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new EntityNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
+                .orElseThrow(
+                        () -> new EntityNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND,
+                                "ProductId: " + productId));
 
         product.validateOwner(userId);
         product.validateUpdatable();
@@ -87,7 +93,8 @@ public class ProductService {
         Category category = product.getCategory();
         if (!category.getId().equals(request.categoryId())) {
             category = categoryRepository.findById(request.categoryId())
-                    .orElseThrow(() -> new EntityNotFoundException(CategoryErrorCode.CATEGORY_NOT_FOUND));
+                    .orElseThrow(() -> new EntityNotFoundException(CategoryErrorCode.CATEGORY_NOT_FOUND,
+                            "CategoryId: " + request.categoryId()));
         }
 
         List<String> imageUrls = (images == null || images.isEmpty())
@@ -105,11 +112,12 @@ public class ProductService {
                 request.description(), request.price(), imageUrls,
                 location, request.address()
         );
-
+        log.info("[Product Update Success] ProductId: {}, ProductName: {}", productId, product.getName());
         return ProductSaveResponse.from(product);
     }
 
     public Page<ProductResponse> getProducts(ProductSearchRequest request, Pageable pageable) {
+        log.debug("[Product Search] Request: {}, Page: {}", request, pageable);
         return productRepository.searchProducts(request, pageable);
     }
 
@@ -123,6 +131,7 @@ public class ProductService {
 
         product.clearImages();
         product.softDelete();
+        log.info("[Product Delete Success] ProductId: {}, ProductName: {}", productId, product.getName());
     }
 
     @Transactional
@@ -130,16 +139,21 @@ public class ProductService {
             Long productId, UpdateProductStatusRequest request, Long userId
     ) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new EntityNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
+                .orElseThrow(() -> new EntityNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND,
+                        "productId: " + productId));
 
+        String pre = product.getStatus().name();
         product.validateOwner(userId);
         product.changeStatus(request.productStatus());
 
+        log.info("[Product Update Status Success] ProductId: {}, ProductName: {}, {}-> {}", productId,
+                product.getName(), pre, request.productStatus().name());
         return UpdateProductStatusResponse.from(product);
     }
 
     @Transactional
     public ProductDetailResponse getProductDetail(Long productId, Double curLat, Double curLng) {
+        log.debug("[Product Detail] ProductId: {}, Location: {},{}", productId, curLat, curLng);
 
         int updated = productRepository.increaseViewCount(productId);
         if (updated == 0) {
@@ -155,7 +169,6 @@ public class ProductService {
                 .toList();
 
         product.setImageUrls(images);
-
         return product;
     }
 }

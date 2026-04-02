@@ -2,6 +2,7 @@ package com.project.market_service.common.security;
 
 import static com.project.market_service.common.constants.AuthConstants.AUTH_HEADER;
 
+import com.project.market_service.common.filter.MdcLoggingFilter;
 import com.project.market_service.common.security.handler.CustomAccessDeniedHandler;
 import com.project.market_service.common.security.jwt.JwtAuthenticationFilter;
 import com.project.market_service.user.domain.UserRole;
@@ -22,6 +23,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -32,6 +34,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final MdcLoggingFilter mdcLoggingFilter;
     private final CustomAccessDeniedHandler accessDeniedHandler;
 
     @Bean
@@ -87,6 +90,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .anyRequest().authenticated()
                 )
+                .addFilterBefore(mdcLoggingFilter, SecurityContextHolderFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(exception -> exception
                         .accessDeniedHandler(accessDeniedHandler))

@@ -16,7 +16,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResult<Void>> handleBusinessException(BusinessException e) {
 
-        log.error("BusinessException: [{}] - {}", e.getClass().getSimpleName(), e.getMessage());
+        log.warn("[BusinessException] {} - {} - {}", e.getClass().getSimpleName(), e.getMessage(),
+                e.getData());
 
         ErrorCode errorCode = e.getErrorCode();
         return ResponseEntity
@@ -41,7 +42,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResult<Void>> handleAllException(Exception e) {
-        log.error("Unhandled Exception: ", e);
+        log.error("[Unhandled Exception] ", e);
         ErrorCode errorCode = CommonErrorCode.SERVER_ERROR;
         return ResponseEntity
                 .status(errorCode.getHttpStatus())

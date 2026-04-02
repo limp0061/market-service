@@ -4,11 +4,11 @@ import lombok.Getter;
 
 @Getter
 public class InvalidStateException extends BusinessException {
-
-    private final ErrorCode errorCode;
-
     public InvalidStateException(ErrorCode errorCode) {
         super(errorCode);
-        this.errorCode = errorCode;
+    }
+
+    public InvalidStateException(ErrorCode errorCode, Object data, ErrorCode errorCode1) {
+        super(errorCode, data);
     }
 }

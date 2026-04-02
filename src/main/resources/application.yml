@@ -18,10 +18,10 @@ spring:
       ddl-auto: create
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
         dialect: org.hibernate.dialect.MySQLDialect
         default_batch_fetch_size: 100
-    show-sql: true
+    show-sql: false
     defer-datasource-initialization: true
   sql:
     init:

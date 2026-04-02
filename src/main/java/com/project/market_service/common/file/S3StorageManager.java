@@ -43,10 +43,9 @@ public class S3StorageManager {
                     RequestBody.fromInputStream(file.getInputStream(), file.getSize())
             );
 
-            log.info("Success File Upload  {}", key);
+            log.info("[File Upload Success] key: {}", key);
         } catch (IOException | S3Exception e) {
-            log.error("Failed File upload {}", key, e);
-            throw new InvalidValueException(CommonErrorCode.FILE_UPLOAD_ERROR);
+            throw new InvalidValueException(CommonErrorCode.FILE_UPLOAD_ERROR, "key: " + key);
         }
     }
 
