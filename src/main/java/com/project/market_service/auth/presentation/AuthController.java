@@ -35,11 +35,7 @@ public class AuthController {
     @Operation(summary = "회원가입",
             security = {}
     )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "회원가입 성공"),
-            @ApiResponse(responseCode = "400", description = "유효성 검증 실패"),
-            @ApiResponse(responseCode = "409", description = "아이디 중복")
-    })
+    @ApiResponse(responseCode = "201", description = "회원가입 성공")
     @PostMapping("/sign-up")
     public ResponseEntity<ApiResult<SignUpResponse>> signUp(
             @Valid @RequestBody SignUpRequest request) {
@@ -50,10 +46,7 @@ public class AuthController {
     @Operation(summary = "로그인",
             security = {}
     )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "로그인 성공"),
-            @ApiResponse(responseCode = "401", description = "아이디 또는 비밀번호 불일치")
-    })
+    @ApiResponse(responseCode = "200", description = "로그인 성공")
     @PostMapping("/login")
     public ResponseEntity<ApiResult<LoginResponse>> authLogin(
             @Valid @RequestBody LoginRequest loginRequest
@@ -64,10 +57,7 @@ public class AuthController {
     }
 
     @Operation(summary = "토큰 재발급")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "토큰 재발급 성공"),
-            @ApiResponse(responseCode = "401", description = "토큰 없음 및 만료")
-    })
+    @ApiResponse(responseCode = "200", description = "토큰 재발급 성공")
     @PostMapping("/reissue")
     public ResponseEntity<ApiResult<TokenResponse>> reissue(
             HttpServletRequest request

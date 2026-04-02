@@ -10,8 +10,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum UserRole implements BaseEnum {
-    USER("ROLE_USER", "사용자"),
-    ADMIN("ROLE_ADMIN", "관리자");
+    USER("USER", "사용자"),
+    ADMIN("ADMIN", "관리자");
 
     private final String code;
     private final String desc;

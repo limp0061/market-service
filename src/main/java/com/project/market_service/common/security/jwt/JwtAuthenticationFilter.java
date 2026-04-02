@@ -1,11 +1,11 @@
 package com.project.market_service.common.security.jwt;
 
 import static com.project.market_service.common.constants.RedisConstants.BLACKLIST_TOKEN_PREFIX;
+import static com.project.market_service.common.util.ResponseUtils.sendError;
 
 import com.project.market_service.auth.exception.AuthErrorCode;
 import com.project.market_service.common.exception.BusinessException;
 import com.project.market_service.common.exception.CommonErrorCode;
-import com.project.market_service.common.exception.ErrorCode;
 import com.project.market_service.common.redis.RedisManager;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -46,7 +46,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             JwtUserInfo userInfo = jwtProvider.getUserInfo(token);
 
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userInfo, null,
-                    null);
+                    userInfo.getAuthorities());
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (BusinessException e) {
@@ -61,15 +61,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private void sendError(HttpServletResponse response, ErrorCode errorCode)
-            throws IOException {
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write(
-                String.format(
-                        "{\"success\":false,\"data\":null,\"message\":\"%s\",\"code\":\"%s\"}",
-                        errorCode.getMessage(), errorCode.name()
-                )
-        );
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getRequestURI();
+
+        return path.startsWith("/api/v1/auth/login") ||
+                path.startsWith("/api/v1/auth/signup") ||
+                path.startsWith("/api/v1/auth/reissue");
     }
 }
