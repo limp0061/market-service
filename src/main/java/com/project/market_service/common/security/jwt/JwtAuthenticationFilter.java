@@ -14,6 +14,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -26,6 +27,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtProvider jwtProvider;
     private final RedisManager redisManager;
+    private static final String MDC_USER_KEY = "loginId";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -42,8 +44,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 sendError(response, AuthErrorCode.TOKEN_LOGGED_OUT);
                 return;
             }
-
             JwtUserInfo userInfo = jwtProvider.getUserInfo(token);
+            MDC.put(MDC_USER_KEY, userInfo.loginId());
 
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userInfo, null,
                     userInfo.getAuthorities());

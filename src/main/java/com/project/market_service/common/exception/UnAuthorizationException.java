@@ -7,4 +7,8 @@ public class UnAuthorizationException extends BusinessException {
     public UnAuthorizationException(ErrorCode errorCode) {
         super(errorCode);
     }
+
+    public UnAuthorizationException(ErrorCode errorCode, Object data) {
+        super(errorCode, data);
+    }
 }
