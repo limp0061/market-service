@@ -136,6 +136,7 @@ public class ProductService {
 
         product.clearImages();
         product.softDelete();
+        // TODO: 배치에서 softDelete된 상품의 연관 wish 정리 필요
         log.info("[Product Delete Success] ProductId: {}, ProductName: {}", productId, product.getName());
     }
 

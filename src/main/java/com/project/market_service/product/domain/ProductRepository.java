@@ -1,13 +1,24 @@
 package com.project.market_service.product.domain;
 
+import jakarta.persistence.LockModeType;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface ProductRepository extends JpaRepository<Product, Long>, ProductRepositoryCustom {
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM Product p WHERE p.id = :id")
+    Optional<Product> findByIdWithLock(Long id);
+
     @Modifying(clearAutomatically = true)
-    @Query("UPDATE Product p SET p.viewCount = p.viewCount+1 WHERE p.id = :productId")
-    int increaseViewCount(@Param("productId") Long productId);
+    @Query("UPDATE Product p SET p.wishCount = p.wishCount + 1 WHERE p.id = :id")
+    void increaseWishCount(@Param("id") Long id);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Product p SET p.wishCount = p.wishCount - 1 WHERE p.id = :id")
+    void decreaseWishCount(@Param("id") Long id);
 }
