@@ -62,10 +62,10 @@ public class Product extends BaseEntity {
     private ProductStatus status;
 
     @Column(nullable = false)
-    private int viewCount = 0;
+    private long viewCount = 0;
 
     @Column(nullable = false)
-    private int wishCount = 0;
+    private long wishCount = 0;
 
     @Column(nullable = false, columnDefinition = "POINT SRID 4326")
     private Point location;
@@ -122,8 +122,8 @@ public class Product extends BaseEntity {
         this.description = description;
         this.price = price;
         this.status = status;
-        this.viewCount = 0;
-        this.wishCount = 0;
+        this.viewCount = 0L;
+        this.wishCount = 0L;
         this.location = location;
         this.address = address;
     }

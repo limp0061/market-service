@@ -25,11 +25,14 @@ import com.project.market_service.user.domain.UserErrorCode;
 import com.project.market_service.user.domain.UserRepository;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Point;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -45,6 +48,8 @@ public class ProductService {
     private final FileService fileService;
     private final ProductRepository productRepository;
     private final ProductImageRepository productImageRepository;
+    private final ProductViewCountService productViewCountService;
+    private final JdbcTemplate jdbcTemplate;
 
     @Transactional
     public ProductSaveResponse saveProduct(
@@ -152,13 +157,8 @@ public class ProductService {
     }
 
     @Transactional
-    public ProductDetailResponse getProductDetail(Long productId, Double curLat, Double curLng) {
+    public ProductDetailResponse getProductDetail(Long productId, Double curLat, Double curLng, Long userId) {
         log.debug("[Product Detail] ProductId: {}, Location: {},{}", productId, curLat, curLng);
-
-        int updated = productRepository.increaseViewCount(productId);
-        if (updated == 0) {
-            throw new EntityNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND);
-        }
 
         ProductDetailResponse product = productRepository.findWithDistinctById(productId, curLat, curLng)
                 .orElseThrow(() -> new EntityNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
@@ -169,7 +169,27 @@ public class ProductService {
                 .toList();
 
         product.setImageUrls(images);
+
+        long viewCount = productViewCountService.increaseViewCount(product.getProductId(), userId);
+        product.setViewCount(product.getViewCount() + viewCount);
+
         return product;
+    }
+
+    @Transactional
+    public void batchUpdateViewCount(Map<Long, Long> viewCounts, int batchSize) {
+        if (viewCounts.isEmpty()) {
+            return;
+        }
+        List<Entry<Long, Long>> entries = new ArrayList<>(viewCounts.entrySet());
+        jdbcTemplate.batchUpdate("UPDATE products SET view_count = view_count + ? WHERE product_id = ?",
+                entries,
+                batchSize,
+                (ps, entry) -> {
+                    ps.setLong(1, entry.getValue());
+                    ps.setLong(2, entry.getKey());
+                }
+        );
     }
 }
 
