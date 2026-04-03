@@ -183,8 +183,4 @@ public class Product extends BaseEntity {
         super.softDelete();
         this.status = ProductStatus.DELETED;
     }
-
-    public void increaseViewCount() {
-        this.viewCount++;
-    }
 }
