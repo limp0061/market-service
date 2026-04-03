@@ -124,10 +124,11 @@ public class ProductController {
     public ResponseEntity<ApiResult<ProductDetailResponse>> getProduct(
             @PathVariable Long id,
             @RequestParam("curLat") Double curLat,
-            @RequestParam("curLng") Double curLng
+            @RequestParam("curLng") Double curLng,
+            @AuthenticationPrincipal JwtUserInfo userInfo
     ) {
         return ResponseEntity.ok().body(
-                ApiResult.success(productService.getProductDetail(id, curLat, curLng))
+                ApiResult.success(productService.getProductDetail(id, curLat, curLng, userInfo.userId()))
         );
     }
 }
