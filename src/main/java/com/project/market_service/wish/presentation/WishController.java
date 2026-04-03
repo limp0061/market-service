@@ -30,7 +30,7 @@ public class WishController {
 
     private final WishService wishService;
 
-    @Operation(description = "찜 토글")
+    @Operation(summary = "찜 토글")
     @ApiResponse(responseCode = "200", description = "찜 토글 변경")
     @PostMapping("/products/{id}/wish")
     public ResponseEntity<ApiResult<ToggleWishResponse>> toggleWished(
@@ -42,7 +42,7 @@ public class WishController {
         );
     }
 
-    @Operation(description = "찜 목록 조회")
+    @Operation(summary = "찜 목록 조회")
     @ApiResponse(responseCode = "200", description = "찜 목록 조회 성공")
     @GetMapping("/users/{id}/wishes")
     public ResponseEntity<ApiResult<PageResponse<WishResponse>>> getWishProducts(
