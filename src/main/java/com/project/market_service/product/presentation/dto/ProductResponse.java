@@ -19,9 +19,9 @@ public record ProductResponse(
         @Schema(description = "상품 상태", example = "SELLING")
         ProductStatus productStatus,
         @Schema(description = "조회 수", example = "120")
-        int viewCount,
+        Long viewCount,
         @Schema(description = "찜하기 수", example = "15")
-        int wishCount,
+        Long wishCount,
         @Schema(description = "장소", example = "풍무동")
         String address,
         @Schema(description = "거리", example = "1.5")
