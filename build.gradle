@@ -78,6 +78,8 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testRuntimeOnly 'com.h2database:h2'
     testImplementation 'com.github.codemonstur:embedded-redis:1.4.3'
+    testImplementation 'org.testcontainers:mysql:1.21.4'
+    testImplementation 'org.testcontainers:junit-jupiter:1.21.4'
 }
 
 tasks.named('test') {
