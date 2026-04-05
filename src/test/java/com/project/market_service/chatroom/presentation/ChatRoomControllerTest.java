@@ -106,7 +106,7 @@ class ChatRoomControllerTest extends IntegrationTestBase {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.size()").value(4))
-                .andExpect(jsonPath("$.data[?(@.partnerName == '판매자')]").exists())
+                .andExpect(jsonPath("$.data[?(@.partnerName == '구매자A')]").exists())
                 .andDo(print());
     }
 
