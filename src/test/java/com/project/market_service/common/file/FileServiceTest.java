@@ -2,14 +2,13 @@ package com.project.market_service.common.file;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 import com.project.market_service.common.exception.CommonErrorCode;
 import com.project.market_service.common.exception.InvalidValueException;
@@ -48,11 +47,9 @@ class FileServiceTest {
         List<String> result = fileService.uploadProductImage(images);
 
         // then
-        assertAll(
-                () -> assertThat(result).hasSize(2),
-                () -> verify(s3StorageManager, times(2)).upload(anyString(), any(MultipartFile.class)),
-                () -> verify(s3StorageManager, times(2)).getPublicUrl(anyString())
-        );
+        assertThat(result).hasSize(2);
+        then(s3StorageManager).should(times(2)).upload(anyString(), any(MultipartFile.class));
+        then(s3StorageManager).should(times(2)).getPublicUrl(anyString());
     }
 
     @Test
@@ -62,11 +59,8 @@ class FileServiceTest {
         List<String> result = fileService.uploadProductImage(List.of());
 
         // then
-        assertAll(
-                () -> assertThat(result).isEmpty(),
-                () -> verify(s3StorageManager, never()).upload(anyString(), any(MultipartFile.class))
-        );
-
+        assertThat(result).isEmpty();
+        then(s3StorageManager).should(never()).upload(anyString(), any(MultipartFile.class));
     }
 
     @Test
@@ -82,6 +76,6 @@ class FileServiceTest {
         assertThatThrownBy(() -> fileService.uploadProductImage(List.of(invalidFile)))
                 .isInstanceOf(InvalidValueException.class);
 
-        verify(s3StorageManager, never()).upload(anyString(), any());
+        then(s3StorageManager).should(never()).upload(anyString(), any());
     }
 }

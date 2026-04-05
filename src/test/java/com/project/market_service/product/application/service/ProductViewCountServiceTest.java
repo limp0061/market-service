@@ -6,9 +6,9 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 import com.project.market_service.common.redis.RedisManager;
 import org.junit.jupiter.api.Test;
@@ -40,7 +40,8 @@ class ProductViewCountServiceTest {
 
         // then
         assertThat(result).isEqualTo(11L);
-        verify(redisManager, times(1)).increment(anyString());
+        then(redisManager).should(times(1)).increment(anyString());
+
     }
 
     @Test
@@ -56,6 +57,6 @@ class ProductViewCountServiceTest {
 
         // then
         assertThat(result).isEqualTo(10L);
-        verify(redisManager, never()).increment(anyString());
+        then(redisManager).should(never()).increment(anyString());
     }
 }

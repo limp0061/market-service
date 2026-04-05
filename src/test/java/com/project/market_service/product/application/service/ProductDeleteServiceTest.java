@@ -7,8 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 
 import com.project.market_service.auth.exception.AuthErrorCode;
 import com.project.market_service.category.domain.Category;
@@ -66,9 +66,9 @@ class ProductDeleteServiceTest {
         // then
         assertAll(
                 () -> assertThat(product.isDeleted()).isTrue(),
-                () -> assertThat(product.getStatus()).isEqualTo(ProductStatus.DELETED),
-                () -> verify(productRepository, never()).delete(any())
+                () -> assertThat(product.getStatus()).isEqualTo(ProductStatus.DELETED)
         );
+        then(productRepository).should(never()).delete(any());
     }
 
     @Test
