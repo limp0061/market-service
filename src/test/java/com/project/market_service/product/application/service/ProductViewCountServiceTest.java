@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
@@ -50,7 +49,7 @@ class ProductViewCountServiceTest {
         Long userId = 1L;
         given(redisManager.setIfAbsent(anyString(), any(), anyLong(), any()))
                 .willReturn(false);
-        given(redisManager.get(anyString(), eq(Long.class))).willReturn(10L);
+        given(redisManager.getCount(anyString())).willReturn("10");
 
         // when
         Long result = productViewCountService.increaseViewCount(productId, userId);
