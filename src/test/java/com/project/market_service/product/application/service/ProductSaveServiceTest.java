@@ -7,9 +7,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 import com.project.market_service.category.domain.Category;
 import com.project.market_service.category.domain.CategoryRepository;
@@ -30,6 +30,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -82,15 +83,23 @@ class ProductSaveServiceTest {
         Product savedProduct = Product.builder().id(100L).name(request.name()).build();
         given(productRepository.save(any(Product.class))).willReturn(savedProduct);
 
+        ArgumentCaptor<Product> productCaptor = ArgumentCaptor.forClass(Product.class);
+
         // when
         ProductSaveResponse response = productService.saveProduct(request, images, 1L);
 
         // then
+        then(productRepository).should().save(productCaptor.capture());
+        Product capturedProduct = productCaptor.getValue();
+
         assertAll(
                 () -> assertThat(response.productName()).isEqualTo("중고 아이폰"),
-                () -> verify(productRepository, times(1)).save(any(Product.class)),
-                () -> verify(fileService, times(1)).uploadProductImage(anyList())
+                () -> assertThat(capturedProduct.getName()).isEqualTo(request.name()),
+                () -> assertThat(capturedProduct.getPrice()).isEqualByComparingTo(request.price()),
+                () -> assertThat(capturedProduct.getCategory().getId()).isEqualTo(request.categoryId()),
+                () -> assertThat(capturedProduct.getImages()).hasSize(2)
         );
+        then(fileService).should(times(1)).uploadProductImage(anyList());
     }
 
     @Test
@@ -107,10 +116,8 @@ class ProductSaveServiceTest {
         productService.saveProduct(request, List.of(), 1L);
 
         // then
-        assertAll(
-                () -> verify(fileService, never()).uploadProductImage(anyList()),
-                () -> verify(productRepository, times(1)).save(any(Product.class))
-        );
+        then(fileService).should(never()).uploadProductImage(anyList());
+        then(productRepository).should(times(1)).save(any(Product.class));
     }
 
     @Test
@@ -124,10 +131,8 @@ class ProductSaveServiceTest {
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessage(UserErrorCode.USER_NOT_FOUND.getMessage());
 
-        assertAll(
-                () -> verify(categoryRepository, never()).findById(anyLong()),
-                () -> verify(productRepository, never()).save(any())
-        );
+        then(categoryRepository).should(never()).findById(anyLong());
+        then(productRepository).should(never()).save(any());
     }
 
 
@@ -143,9 +148,7 @@ class ProductSaveServiceTest {
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessage(CategoryErrorCode.CATEGORY_NOT_FOUND.getMessage());
 
-        assertAll(
-                () -> verify(userRepository, times(1)).findById(anyLong()),
-                () -> verify(productRepository, never()).save(any())
-        );
+        then(userRepository).should(times(1)).findById(anyLong());
+        then(productRepository).should(never()).save(any());
     }
 }

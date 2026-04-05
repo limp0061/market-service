@@ -2,11 +2,10 @@ package com.project.market_service.wish.application.service;
 
 import static com.project.market_service.common.util.GeoUtils.createPoint;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
+import static org.mockito.BDDMockito.then;
 
 import com.project.market_service.category.domain.Category;
 import com.project.market_service.product.domain.Product;
@@ -71,11 +70,9 @@ class WishServiceTest {
         ToggleWishResponse response = wishService.toggleWish(1L, 1L);
 
         //then
-        assertAll(
-                () -> assertThat(response.isWished()).isTrue(),
-                () -> verify(wishRepository).save(any(Wish.class)),
-                () -> verify(productRepository).increaseWishCount(anyLong())
-        );
+        assertThat(response.isWished()).isTrue();
+        then(wishRepository).should().save(any(Wish.class));
+        then(productRepository).should().increaseWishCount(anyLong());
     }
 
     @Test
@@ -92,10 +89,8 @@ class WishServiceTest {
         ToggleWishResponse response = wishService.toggleWish(1L, 1L);
 
         //then
-        assertAll(
-                () -> assertThat(response.isWished()).isFalse(),
-                () -> verify(wishRepository).delete(wish),
-                () -> verify(productRepository).decreaseWishCount(anyLong())
-        );
+        assertThat(response.isWished()).isFalse();
+        then(wishRepository).should().delete(wish);
+        then(productRepository).should().decreaseWishCount(anyLong());
     }
 }

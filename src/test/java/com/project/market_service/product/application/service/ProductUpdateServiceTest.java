@@ -7,8 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 
 import com.project.market_service.auth.exception.AuthErrorCode;
 import com.project.market_service.category.domain.Category;
@@ -117,10 +117,8 @@ class ProductUpdateServiceTest {
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessage(ProductErrorCode.PRODUCT_NOT_FOUND.getMessage());
 
-        assertAll(
-                () -> verify(categoryRepository, never()).findById(anyLong()),
-                () -> verify(fileService, never()).uploadProductImage(anyList())
-        );
+        then(categoryRepository).should(never()).findById(anyLong());
+        then(fileService).should(never()).uploadProductImage(anyList());
     }
 
     @Test
@@ -142,8 +140,8 @@ class ProductUpdateServiceTest {
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessage(CategoryErrorCode.CATEGORY_NOT_FOUND.getMessage());
 
-        verify(categoryRepository).findById(newCategoryId);
-        verify(fileService, never()).uploadProductImage(anyList());
+        then(categoryRepository).should().findById(newCategoryId);
+        then(fileService).should(never()).uploadProductImage(anyList());
     }
 
     @Test
