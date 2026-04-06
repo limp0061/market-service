@@ -31,6 +31,8 @@ spring:
     redis:
       host: localhost
       port: 16379
+    mongodb:
+      uri: mongodb://admin:password1234@localhost:27017/marketdb?authSource=admin
 
   servlet:
     multipart:
