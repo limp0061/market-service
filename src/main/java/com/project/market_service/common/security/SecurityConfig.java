@@ -87,7 +87,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/logout").authenticated()
                         .requestMatchers("/api/v1/admin/**").hasRole(UserRole.ADMIN.getCode())
-                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/api/v1/auth/**", "/ws/chat/**", "/sub/chat/**", "/pub/chat").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(mdcLoggingFilter, SecurityContextHolderFilter.class)
