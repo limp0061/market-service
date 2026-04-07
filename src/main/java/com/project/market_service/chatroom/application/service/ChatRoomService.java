@@ -1,7 +1,9 @@
 package com.project.market_service.chatroom.application.service;
 
+import com.project.market_service.chatroom.application.port.in.ChatRoomUseCase;
+import com.project.market_service.chatroom.application.port.out.ChatRoomCache;
+import com.project.market_service.chatroom.application.port.out.ChatRoomRepository;
 import com.project.market_service.chatroom.domain.ChatRoom;
-import com.project.market_service.chatroom.domain.ChatRoomRepository;
 import com.project.market_service.chatroom.exception.ChatRoomErrorCode;
 import com.project.market_service.chatroom.presentation.dto.ChatRoomResponse;
 import com.project.market_service.common.exception.EntityNotFoundException;
@@ -23,12 +25,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class ChatRoomService {
+public class ChatRoomService implements ChatRoomUseCase {
 
     private final ChatRoomRepository chatRoomRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final ChatRoomCache chatRoomCache;
 
+    @Override
     @Transactional
     public ChatRoomResponse createChatRoom(Long productId, Long buyerId) {
 
@@ -53,11 +57,14 @@ public class ChatRoomService {
                 ChatRoom.create(product, buyer, seller)
         );
 
+        chatRoomCache.addParticipants(createdChatRoom.getId(), buyer.getId(), seller.getId());
+
         log.info("[ChatRoom Create] productId: {}, productName: {}, buyerId: {}, sellerId: {}", product.getId(),
                 product.getName(), buyer.getId(), seller.getId());
         return ChatRoomResponse.from(createdChatRoom);
     }
 
+    @Override
     public List<ChatRoomResponse> getMyChatRooms(Long userId) {
         return chatRoomRepository.getMyChatRooms(userId);
     }

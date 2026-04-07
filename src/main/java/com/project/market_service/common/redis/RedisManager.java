@@ -27,6 +27,10 @@ public class RedisManager {
         redisTemplate.opsForValue().set(key, value, duration, timeUnit);
     }
 
+    public void addToSet(String key, Object... values) {
+        redisTemplate.opsForSet().add(key, values);
+    }
+
     public <T> T get(String key, Class<T> clazz) {
         Object value = redisTemplate.opsForValue().get(key);
         return value != null ? objectMapper.convertValue(value, clazz) : null;
@@ -38,6 +42,14 @@ public class RedisManager {
 
     public boolean hasKey(String key) {
         return Boolean.TRUE.equals(redisTemplate.hasKey(key));
+    }
+
+    public boolean isMember(String key, Object value) {
+        return Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(key, value));
+    }
+
+    public void expire(String key, int duration, TimeUnit timeUnit) {
+        redisTemplate.expire(key, duration, timeUnit);
     }
 
     // ==== 카운터 / 문자열 ====
@@ -76,4 +88,5 @@ public class RedisManager {
         }
         stringRedisTemplate.delete(keys);
     }
+
 }

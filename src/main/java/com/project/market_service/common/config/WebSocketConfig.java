@@ -1,8 +1,10 @@
 package com.project.market_service.common.config;
 
 import com.project.market_service.common.interceptor.ChatTokenHandShakeInterceptor;
+import com.project.market_service.common.interceptor.StompChannelInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
@@ -14,6 +16,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final ChatTokenHandShakeInterceptor chatTokenHandShakeInterceptor;
+    private final StompChannelInterceptor stompChannelInterceptor;
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
@@ -34,5 +37,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 .setAllowedOriginPatterns("*") // CORS 허용 (실제 운영시에는 특정 도메인만 지정)
                 .addInterceptors(chatTokenHandShakeInterceptor);
 //                .withSockJS(); // 웹소켓을 지원하지 않는 브라우저를 위한 대체 옵션(SockJS) 활성화
+    }
+
+    @Override
+    public void configureClientInboundChannel(ChannelRegistration registration) {
+        registration.interceptors(stompChannelInterceptor);
     }
 }

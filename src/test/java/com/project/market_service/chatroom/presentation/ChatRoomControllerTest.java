@@ -1,8 +1,8 @@
 package com.project.market_service.chatroom.presentation;
 
 import static com.project.market_service.common.util.GeoUtils.createPoint;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -10,7 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.project.market_service.category.domain.Category;
 import com.project.market_service.category.domain.CategoryRepository;
 import com.project.market_service.chatroom.domain.ChatRoom;
-import com.project.market_service.chatroom.domain.ChatRoomRepository;
+import com.project.market_service.chatroom.application.port.out.ChatRoomRepository;
 import com.project.market_service.chatroom.presentation.dto.ChatRoomCreatRequest;
 import com.project.market_service.common.security.jwt.JwtUserInfo;
 import com.project.market_service.config.IntegrationTestBase;

@@ -1,0 +1,24 @@
+package com.project.market_service.chatmessage.presentation;
+
+import com.project.market_service.chatmessage.application.service.ChatMessageService;
+import com.project.market_service.chatmessage.presentation.dto.ChatMessageRequest;
+import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
+import org.springframework.stereotype.Controller;
+
+@Controller
+@RequiredArgsConstructor
+public class ChatMessageController {
+
+    private final ChatMessageService messageService;
+
+    @MessageMapping("/chat/message")
+    public void handleMessage(
+            ChatMessageRequest request,
+            SimpMessageHeaderAccessor accessor
+    ) {
+        String userId = (String) accessor.getSessionAttributes().get("userId");
+        messageService.processHandleMessage(request, Long.parseLong(userId));
+    }
+}

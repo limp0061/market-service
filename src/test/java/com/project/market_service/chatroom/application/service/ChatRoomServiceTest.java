@@ -11,7 +11,8 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
 
 import com.project.market_service.chatroom.domain.ChatRoom;
-import com.project.market_service.chatroom.domain.ChatRoomRepository;
+import com.project.market_service.chatroom.application.port.out.ChatRoomCache;
+import com.project.market_service.chatroom.application.port.out.ChatRoomRepository;
 import com.project.market_service.chatroom.exception.ChatRoomErrorCode;
 import com.project.market_service.chatroom.presentation.dto.ChatRoomResponse;
 import com.project.market_service.common.exception.InvalidValueException;
@@ -40,6 +41,9 @@ class ChatRoomServiceTest {
 
     @Mock
     private ProductRepository productRepository;
+
+    @Mock
+    private ChatRoomCache chatRoomCache;
 
     @InjectMocks
     private ChatRoomService chatRoomService;
