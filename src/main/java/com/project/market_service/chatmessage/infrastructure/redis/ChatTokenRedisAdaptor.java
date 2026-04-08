@@ -2,7 +2,7 @@ package com.project.market_service.chatmessage.infrastructure.redis;
 
 import static com.project.market_service.common.constants.RedisConstants.CHAT_TOKEN_PREFIX;
 
-import com.project.market_service.chatmessage.domain.ChatTokenCache;
+import com.project.market_service.chatmessage.application.port.out.ChatTokenCache;
 import com.project.market_service.common.redis.RedisManager;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;

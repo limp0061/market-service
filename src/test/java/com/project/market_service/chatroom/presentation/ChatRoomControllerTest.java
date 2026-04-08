@@ -9,15 +9,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.project.market_service.category.domain.Category;
 import com.project.market_service.category.domain.CategoryRepository;
-import com.project.market_service.chatroom.domain.ChatRoom;
 import com.project.market_service.chatroom.application.port.out.ChatRoomRepository;
+import com.project.market_service.chatroom.domain.ChatRoom;
 import com.project.market_service.chatroom.presentation.dto.ChatRoomCreatRequest;
 import com.project.market_service.common.security.jwt.JwtUserInfo;
 import com.project.market_service.config.IntegrationTestBase;
 import com.project.market_service.product.domain.Product;
 import com.project.market_service.product.domain.ProductRepository;
+import com.project.market_service.user.application.port.out.UserRepository;
 import com.project.market_service.user.domain.User;
-import com.project.market_service.user.domain.UserRepository;
 import com.project.market_service.user.domain.UserRole;
 import java.math.BigDecimal;
 import java.util.List;

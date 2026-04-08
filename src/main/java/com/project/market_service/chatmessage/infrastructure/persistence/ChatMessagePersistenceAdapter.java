@@ -1,14 +1,14 @@
 package com.project.market_service.chatmessage.infrastructure.persistence;
 
 import com.project.market_service.chatmessage.domain.ChatMessage;
-import com.project.market_service.chatmessage.domain.ChatMessageRepository;
+import com.project.market_service.chatmessage.application.port.out.ChatMessageRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-public class ChatMessageRepositoryImpl implements ChatMessageRepository {
+public class ChatMessagePersistenceAdapter implements ChatMessageRepository {
 
     private final MongoChatMessageRepository mongoRepository;
 

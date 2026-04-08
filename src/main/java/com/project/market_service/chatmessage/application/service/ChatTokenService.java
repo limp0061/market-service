@@ -1,6 +1,6 @@
 package com.project.market_service.chatmessage.application.service;
 
-import com.project.market_service.chatmessage.domain.ChatTokenCache;
+import com.project.market_service.chatmessage.application.port.out.ChatTokenCache;
 import com.project.market_service.chatmessage.presentation.dto.ChatTokenResponse;
 import com.project.market_service.common.util.UuidGenerator;
 import lombok.RequiredArgsConstructor;

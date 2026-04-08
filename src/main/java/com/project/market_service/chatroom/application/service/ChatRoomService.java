@@ -11,9 +11,9 @@ import com.project.market_service.common.exception.InvalidValueException;
 import com.project.market_service.product.domain.Product;
 import com.project.market_service.product.domain.ProductRepository;
 import com.project.market_service.product.exception.ProductErrorCode;
+import com.project.market_service.user.application.port.out.UserRepository;
 import com.project.market_service.user.domain.User;
 import com.project.market_service.user.domain.UserErrorCode;
-import com.project.market_service.user.domain.UserRepository;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -47,7 +47,8 @@ public class ChatRoomService implements ChatRoomUseCase {
 
         User seller = product.getUser();
         if (seller.getId().equals(buyerId)) {
-            throw new InvalidValueException(ChatRoomErrorCode.CANNOT_CHAT_WITH_SELF);
+            throw new InvalidValueException(ChatRoomErrorCode.CANNOT_CHAT_WITH_SELF,
+                    "productId: " + productId + "buyerId:" + buyerId);
         }
 
         User buyer = userRepository.findById(buyerId)

@@ -27,10 +27,4 @@ public class ChatRoomRedisAdapter implements ChatRoomCache {
         String redisKey = String.format(RedisConstants.CHAT_ROOM_USER_LIST, roomId);
         return redisManager.isMember(redisKey, userId);
     }
-
-    @Override
-    public void updateActiveRoom(Long userId, Long roomId) {
-        String redisKey = String.format(RedisConstants.CHAT_ACTIVE_USER_ROOM, roomId, userId);
-        redisManager.addToSet(redisKey, RedisConstants.ACTIVE_VALUE, 1, TimeUnit.HOURS);
-    }
 }

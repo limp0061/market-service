@@ -1,8 +1,8 @@
 package com.project.market_service.user.application.sevice;
 
 import com.project.market_service.common.exception.DuplicateException;
+import com.project.market_service.user.application.port.out.UserRepository;
 import com.project.market_service.user.domain.UserErrorCode;
-import com.project.market_service.user.domain.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
