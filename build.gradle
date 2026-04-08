@@ -68,6 +68,11 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-log4j2'
     implementation 'com.lmax:disruptor:3.4.4'
 
+    /*===============
+        Mongodb
+    ===============*/
+    implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'com.mysql:mysql-connector-j'
@@ -79,6 +84,7 @@ dependencies {
     testRuntimeOnly 'com.h2database:h2'
     testImplementation 'com.github.codemonstur:embedded-redis:1.4.3'
     testImplementation 'org.testcontainers:mysql:1.21.4'
+    testImplementation "org.testcontainers:mongodb:1.19.0"
     testImplementation 'org.testcontainers:junit-jupiter:1.21.4'
 }
 

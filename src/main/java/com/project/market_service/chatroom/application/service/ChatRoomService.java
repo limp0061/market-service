@@ -1,7 +1,11 @@
 package com.project.market_service.chatroom.application.service;
 
+import com.project.market_service.chatroom.application.port.in.ChatRoomUseCase;
+import com.project.market_service.chatroom.application.port.out.ChatRoomCache;
+import com.project.market_service.chatroom.application.port.out.ChatRoomRepository;
+import com.project.market_service.chatroom.application.port.out.ChatRoomUserRepository;
 import com.project.market_service.chatroom.domain.ChatRoom;
-import com.project.market_service.chatroom.domain.ChatRoomRepository;
+import com.project.market_service.chatroom.domain.ChatRoomUser;
 import com.project.market_service.chatroom.exception.ChatRoomErrorCode;
 import com.project.market_service.chatroom.presentation.dto.ChatRoomResponse;
 import com.project.market_service.common.exception.EntityNotFoundException;
@@ -9,9 +13,9 @@ import com.project.market_service.common.exception.InvalidValueException;
 import com.project.market_service.product.domain.Product;
 import com.project.market_service.product.domain.ProductRepository;
 import com.project.market_service.product.exception.ProductErrorCode;
+import com.project.market_service.user.application.port.out.UserRepository;
 import com.project.market_service.user.domain.User;
 import com.project.market_service.user.domain.UserErrorCode;
-import com.project.market_service.user.domain.UserRepository;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -23,12 +27,15 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class ChatRoomService {
+public class ChatRoomService implements ChatRoomUseCase {
 
     private final ChatRoomRepository chatRoomRepository;
+    private final ChatRoomUserRepository chatRoomUserRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final ChatRoomCache chatRoomCache;
 
+    @Override
     @Transactional
     public ChatRoomResponse createChatRoom(Long productId, Long buyerId) {
 
@@ -43,7 +50,8 @@ public class ChatRoomService {
 
         User seller = product.getUser();
         if (seller.getId().equals(buyerId)) {
-            throw new InvalidValueException(ChatRoomErrorCode.CANNOT_CHAT_WITH_SELF);
+            throw new InvalidValueException(ChatRoomErrorCode.CANNOT_CHAT_WITH_SELF,
+                    "productId: " + productId + "buyerId:" + buyerId);
         }
 
         User buyer = userRepository.findById(buyerId)
@@ -53,11 +61,17 @@ public class ChatRoomService {
                 ChatRoom.create(product, buyer, seller)
         );
 
+        ChatRoomUser chatRoomBuyer = ChatRoomUser.create(createdChatRoom.getId(), buyer.getId());
+        ChatRoomUser chatRoomSeller = ChatRoomUser.create(createdChatRoom.getId(), seller.getId());
+        chatRoomUserRepository.saveAllChatRoomUser(List.of(chatRoomBuyer, chatRoomSeller));
+        chatRoomCache.addParticipants(createdChatRoom.getId(), buyer.getId(), seller.getId());
+
         log.info("[ChatRoom Create] productId: {}, productName: {}, buyerId: {}, sellerId: {}", product.getId(),
                 product.getName(), buyer.getId(), seller.getId());
         return ChatRoomResponse.from(createdChatRoom);
     }
 
+    @Override
     public List<ChatRoomResponse> getMyChatRooms(Long userId) {
         return chatRoomRepository.getMyChatRooms(userId);
     }
