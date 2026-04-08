@@ -6,7 +6,7 @@ import com.project.market_service.chatmessage.domain.ChatMessage;
 import com.project.market_service.chatmessage.presentation.dto.ChatMessageRequest;
 import com.project.market_service.chatmessage.presentation.dto.ChatMessageResponse;
 import com.project.market_service.chatmessage.presentation.dto.ChatPagingRequest;
-import com.project.market_service.chatroom.application.port.out.ChatRoomRepository;
+import com.project.market_service.chatroom.application.port.out.ChatRoomUserRepository;
 import com.project.market_service.chatroom.application.service.ChatRoomValidator;
 import com.project.market_service.user.application.port.in.UserUseCase;
 import java.util.List;
@@ -23,7 +23,7 @@ public class ChatMessageService implements ChatMessageUseCase {
     private final UserUseCase userUseCase;
     private final ChatMessageRepository chatMessageRepository;
     private final ChatRoomValidator chatRoomValidator;
-    private final ChatRoomRepository chatRoomRepository;
+    private final ChatRoomUserRepository chatRoomUserRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
     @Override
@@ -43,9 +43,13 @@ public class ChatMessageService implements ChatMessageUseCase {
     public List<ChatMessageResponse> getChatMessages(ChatPagingRequest request, Long userId) {
         chatRoomValidator.validateUserInRoom(request.roomId(), userId);
 
-        return chatMessageRepository.findMessagesByRoomId(request)
+        List<ChatMessageResponse> list = chatMessageRepository.findMessagesByRoomId(request)
                 .stream()
                 .map(chat -> ChatMessageResponse.of(chat, userUseCase.getName(chat.getSenderId())))
                 .toList();
+
+        chatRoomUserRepository.updateLastReadAt(request.roomId(), userId);
+
+        return list;
     }
 }

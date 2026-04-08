@@ -3,7 +3,9 @@ package com.project.market_service.chatroom.application.service;
 import com.project.market_service.chatroom.application.port.in.ChatRoomUseCase;
 import com.project.market_service.chatroom.application.port.out.ChatRoomCache;
 import com.project.market_service.chatroom.application.port.out.ChatRoomRepository;
+import com.project.market_service.chatroom.application.port.out.ChatRoomUserRepository;
 import com.project.market_service.chatroom.domain.ChatRoom;
+import com.project.market_service.chatroom.domain.ChatRoomUser;
 import com.project.market_service.chatroom.exception.ChatRoomErrorCode;
 import com.project.market_service.chatroom.presentation.dto.ChatRoomResponse;
 import com.project.market_service.common.exception.EntityNotFoundException;
@@ -28,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ChatRoomService implements ChatRoomUseCase {
 
     private final ChatRoomRepository chatRoomRepository;
+    private final ChatRoomUserRepository chatRoomUserRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final ChatRoomCache chatRoomCache;
@@ -58,6 +61,9 @@ public class ChatRoomService implements ChatRoomUseCase {
                 ChatRoom.create(product, buyer, seller)
         );
 
+        ChatRoomUser chatRoomBuyer = ChatRoomUser.create(createdChatRoom.getId(), buyer.getId());
+        ChatRoomUser chatRoomSeller = ChatRoomUser.create(createdChatRoom.getId(), seller.getId());
+        chatRoomUserRepository.saveAllChatRoomUser(List.of(chatRoomBuyer, chatRoomSeller));
         chatRoomCache.addParticipants(createdChatRoom.getId(), buyer.getId(), seller.getId());
 
         log.info("[ChatRoom Create] productId: {}, productName: {}, buyerId: {}, sellerId: {}", product.getId(),
