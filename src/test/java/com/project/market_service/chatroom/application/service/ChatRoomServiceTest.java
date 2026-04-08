@@ -5,13 +5,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 
 import com.project.market_service.chatroom.application.port.out.ChatRoomCache;
 import com.project.market_service.chatroom.application.port.out.ChatRoomRepository;
+import com.project.market_service.chatroom.application.port.out.ChatRoomUserRepository;
 import com.project.market_service.chatroom.domain.ChatRoom;
 import com.project.market_service.chatroom.exception.ChatRoomErrorCode;
 import com.project.market_service.chatroom.presentation.dto.ChatRoomResponse;
@@ -44,6 +47,9 @@ class ChatRoomServiceTest {
 
     @Mock
     private ChatRoomCache chatRoomCache;
+
+    @Mock
+    private ChatRoomUserRepository chatRoomUserRepository;
 
     @InjectMocks
     private ChatRoomService chatRoomService;
@@ -89,6 +95,7 @@ class ChatRoomServiceTest {
 
         ArgumentCaptor<ChatRoom> chatRoomCaptor = ArgumentCaptor.forClass(ChatRoom.class);
         then(chatRoomRepository).should().save(chatRoomCaptor.capture());
+        then(chatRoomUserRepository).should(times(1)).saveAllChatRoomUser(anyList());
 
         ChatRoom captured = chatRoomCaptor.getValue();
         assertAll(
@@ -124,6 +131,10 @@ class ChatRoomServiceTest {
                 () -> assertThat(response.productId()).isEqualTo(10L),
                 () -> assertThat(response.productName()).isEqualTo("맥북 프로")
         );
+
+        then(chatRoomRepository).should(never()).save(any());
+        then(chatRoomCache).should(never()).addParticipants(anyLong(), anyLong(), anyLong());
+        then(chatRoomUserRepository).should(never()).saveAllChatRoomUser(anyList());
     }
 
     @Test
