@@ -3,12 +3,14 @@ package com.project.market_service.config;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.containers.MySQLContainer;
 
 @TestConfiguration
 public class TestContainerConfig {
 
     static final MySQLContainer<?> mysql;
+    static final MongoDBContainer mongodb;
 
     static {
         mysql = new MySQLContainer<>("mysql:8.4")
@@ -18,6 +20,10 @@ public class TestContainerConfig {
                 .withReuse(true);
 
         mysql.start();
+
+        mongodb = new MongoDBContainer("mongo:6.0")
+                .withReuse(true);
+        mongodb.start();
     }
 
     @DynamicPropertySource
@@ -26,5 +32,7 @@ public class TestContainerConfig {
         registry.add("spring.datasource.username", mysql::getUsername);
         registry.add("spring.datasource.password", mysql::getPassword);
         registry.add("spring.datasource.driver-class-name", () -> "com.mysql.cj.jdbc.Driver");
+
+        registry.add("spring.data.mongodb.uri", mongodb::getReplicaSetUrl);
     }
 }
