@@ -25,23 +25,18 @@ public class ChatMessage extends BaseTimeEntity {
 
     private String content;
 
-    @Field("is_read")
-    private boolean isRead;
-
     public static ChatMessage create(Long roomId, Long senderId, String content) {
         return ChatMessage.builder()
                 .roomId(roomId)
                 .senderId(senderId)
                 .content(content)
-                .isRead(false)
                 .build();
     }
 
     @Builder
-    public ChatMessage(Long roomId, Long senderId, String content, boolean isRead) {
+    public ChatMessage(Long roomId, Long senderId, String content) {
         this.roomId = roomId;
         this.senderId = senderId;
         this.content = content;
-        this.isRead = isRead;
     }
 }

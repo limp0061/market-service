@@ -1,26 +1,39 @@
 package com.project.market_service.chatmessage.presentation;
 
-import com.project.market_service.chatmessage.application.service.ChatMessageService;
-import com.project.market_service.chatmessage.presentation.dto.ChatMessageRequest;
+import com.project.market_service.chatmessage.application.port.in.ChatMessageUseCase;
+import com.project.market_service.chatmessage.presentation.dto.ChatMessageResponse;
+import com.project.market_service.chatmessage.presentation.dto.ChatPagingRequest;
+import com.project.market_service.common.dto.ApiResult;
+import com.project.market_service.common.security.jwt.JwtUserInfo;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.messaging.handler.annotation.DestinationVariable;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-import org.springframework.stereotype.Controller;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+@Tag(name = "CHAT")
+@RestController
+@RequestMapping("/api/v1/chatrooms")
 @RequiredArgsConstructor
 public class ChatMessageController {
 
-    private final ChatMessageService messageService;
+    private final ChatMessageUseCase chatMessageUseCase;
 
-    @MessageMapping("/chat/message/{roomId}")
-    public void handleMessage(
-            @DestinationVariable Long roomId,
-            ChatMessageRequest request,
-            SimpMessageHeaderAccessor accessor
+    @Operation(summary = "채팅 메시지 조회")
+    @ApiResponse(responseCode = "200", description = "채팅 메시지 조회 성공")
+    @GetMapping("/messages")
+    public ResponseEntity<ApiResult<List<ChatMessageResponse>>> getChatMessages(
+            @ModelAttribute ChatPagingRequest request,
+            @AuthenticationPrincipal JwtUserInfo userInfo
     ) {
-        String userId = (String) accessor.getSessionAttributes().get("userId");
-        messageService.processHandleMessage(request, roomId, Long.parseLong(userId));
+        return ResponseEntity.ok().body(
+                ApiResult.success(chatMessageUseCase.getChatMessages(request, userInfo.userId()))
+        );
     }
 }
