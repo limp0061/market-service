@@ -1,11 +1,11 @@
 package com.project.market_service.common.initialize;
 
 
+import com.project.market_service.category.application.port.out.CategoryPort;
 import com.project.market_service.category.domain.Category;
-import com.project.market_service.category.domain.CategoryRepository;
+import com.project.market_service.product.application.port.out.ProductPort;
 import com.project.market_service.product.domain.Product;
-import com.project.market_service.product.domain.ProductRepository;
-import com.project.market_service.user.application.port.out.UserRepository;
+import com.project.market_service.user.application.port.out.UserPort;
 import com.project.market_service.user.domain.User;
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -26,10 +26,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Profile("!test")
 public class DataInitialIze implements CommandLineRunner {
 
-    private final UserRepository userRepository;
+    private final UserPort userPort;
     private final PasswordEncoder passwordEncoder;
-    private final CategoryRepository categoryRepository;
-    private final ProductRepository productRepository;
+    private final CategoryPort categoryPort;
+    private final ProductPort productPort;
 
     @Override
     public void run(String... args) throws Exception {
@@ -37,10 +37,10 @@ public class DataInitialIze implements CommandLineRunner {
         String encPassword = passwordEncoder.encode("password1234!");
         User user = User.signUp("사용자", "user1", encPassword);
         User admin = User.signUpAdmin("관리자", "hong1234", encPassword);
-        userRepository.saveAll(List.of(user, admin));
+        userPort.saveAll(List.of(user, admin));
 
-        Category electronics = categoryRepository.save(Category.create("디지털기기"));
-        Category furniture = categoryRepository.save(Category.create("가구/인테리어"));
+        Category electronics = categoryPort.save(Category.create("디지털기기"));
+        Category furniture = categoryPort.save(Category.create("가구/인테리어"));
 
         // 3. 공간 데이터 팩토리 설정 (SRID 4326)
         GeometryFactory factory = new GeometryFactory(new PrecisionModel(), 4326);
@@ -67,7 +67,7 @@ public class DataInitialIze implements CommandLineRunner {
                 126.9723, 37.5559, "서울 중구", factory);
         p5.softDelete();
 
-        productRepository.saveAll(List.of(p1, p2, p3, p4, p5));
+        productPort.saveAll(List.of(p1, p2, p3, p4, p5));
     }
 
     private Product createProduct(User user, Category category, String name, String description,

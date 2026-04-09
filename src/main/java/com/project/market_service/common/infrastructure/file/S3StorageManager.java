@@ -1,4 +1,4 @@
-package com.project.market_service.common.file;
+package com.project.market_service.common.infrastructure.file;
 
 import com.project.market_service.common.config.S3Properties;
 import com.project.market_service.common.exception.CommonErrorCode;

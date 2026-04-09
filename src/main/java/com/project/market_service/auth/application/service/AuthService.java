@@ -4,6 +4,7 @@ import static com.project.market_service.common.constants.AuthConstants.TOKEN_LO
 import static com.project.market_service.common.constants.RedisConstants.BLACKLIST_TOKEN_PREFIX;
 import static com.project.market_service.common.constants.RedisConstants.REFRESH_TOKEN_PREFIX;
 
+import com.project.market_service.auth.application.port.in.AuthUseCase;
 import com.project.market_service.auth.exception.AuthErrorCode;
 import com.project.market_service.auth.presentation.dto.LoginRequest;
 import com.project.market_service.auth.presentation.dto.LoginResponse;
@@ -14,7 +15,7 @@ import com.project.market_service.common.exception.EntityNotFoundException;
 import com.project.market_service.common.exception.UnAuthorizationException;
 import com.project.market_service.common.redis.RedisManager;
 import com.project.market_service.common.security.jwt.JwtProvider;
-import com.project.market_service.user.application.port.out.UserRepository;
+import com.project.market_service.user.application.port.out.UserPort;
 import com.project.market_service.user.application.sevice.UserValidator;
 import com.project.market_service.user.domain.User;
 import com.project.market_service.user.domain.UserErrorCode;
@@ -30,14 +31,15 @@ import org.springframework.util.StringUtils;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class AuthService {
+public class AuthService implements AuthUseCase {
 
     private final UserValidator userValidator;
     private final PasswordEncoder passwordEncoder;
-    private final UserRepository userRepository;
+    private final UserPort userPort;
     private final JwtProvider jwtProvider;
     private final RedisManager redisManager;
 
+    @Override
     @Transactional
     public SignUpResponse signUp(SignUpRequest request) {
         userValidator.validateDuplicate(request.loginId());
@@ -50,14 +52,15 @@ public class AuthService {
                 encodedPassword
         );
 
-        User savedUser = userRepository.save(user);
+        User savedUser = userPort.save(user);
 
         log.info("[SignUp Success] New User Create. ID: {}, LoginId: {}", savedUser.getId(), savedUser.getLoginId());
         return SignUpResponse.from(savedUser);
     }
 
+    @Override
     public LoginResponse userLogin(LoginRequest request) {
-        User user = userRepository.findByLoginId(request.loginId())
+        User user = userPort.findByLoginId(request.loginId())
                 .orElseThrow(() ->
                         new UnAuthorizationException(AuthErrorCode.LOGIN_FAILED, "LoginId: " + request.loginId()));
 
@@ -79,6 +82,7 @@ public class AuthService {
         return new LoginResponse(user.getId(), user.getLoginId(), accessToken, refreshToken);
     }
 
+    @Override
     public TokenResponse reissue(String token) {
         if (!StringUtils.hasText(token)) {
             throw new UnAuthorizationException(AuthErrorCode.TOKEN_NOT_FOUND, "Token: " + token);
@@ -91,7 +95,7 @@ public class AuthService {
             throw new UnAuthorizationException(AuthErrorCode.INVALID_TOKEN, "UserId: " + userId);
         }
 
-        User user = userRepository.findById(userId)
+        User user = userPort.findById(userId)
                 .orElseThrow(() ->
                         new EntityNotFoundException(UserErrorCode.USER_NOT_FOUND, "UserId: " + userId));
 
@@ -108,6 +112,7 @@ public class AuthService {
         return new TokenResponse(newAccessToken, newRefreshToken);
     }
 
+    @Override
     public void logout(Long userId, String accessToken) {
         redisManager.delete(REFRESH_TOKEN_PREFIX + userId);
 

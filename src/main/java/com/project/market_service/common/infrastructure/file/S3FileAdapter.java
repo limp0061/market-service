@@ -1,22 +1,24 @@
-package com.project.market_service.common.file;
+package com.project.market_service.common.infrastructure.file;
 
-import static com.project.market_service.common.file.FilePathConstants.PRODUCT_PATH;
+import static com.project.market_service.common.constants.FilePathConstants.PRODUCT_PATH;
 
+import com.project.market_service.common.application.port.out.FilePort;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
-@Service
+@Component
 @RequiredArgsConstructor
-public class FileService {
+public class S3FileAdapter implements FilePort {
 
     private final FileValidator fileValidator;
     private final S3StorageManager s3StorageManager;
 
+    @Override
     public List<String> uploadProductImage(List<MultipartFile> images) {
         if (images == null || images.isEmpty()) {
             return Collections.emptyList();
@@ -27,6 +29,7 @@ public class FileService {
                 .toList();
     }
 
+    @Override
     public String singleFileUpload(MultipartFile file) {
 
         String filePath = makeImagePath(file);

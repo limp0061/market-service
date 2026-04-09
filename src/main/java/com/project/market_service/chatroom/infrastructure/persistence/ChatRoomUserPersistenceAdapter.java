@@ -1,6 +1,6 @@
 package com.project.market_service.chatroom.infrastructure.persistence;
 
-import com.project.market_service.chatroom.application.port.out.ChatRoomUserRepository;
+import com.project.market_service.chatroom.application.port.out.ChatRoomUserPort;
 import com.project.market_service.chatroom.domain.ChatRoomUser;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-public class ChatRoomUserPersistenceAdapter implements ChatRoomUserRepository {
+public class ChatRoomUserPersistenceAdapter implements ChatRoomUserPort {
 
     private final MongoChatRoomUserRepository mongoChatRoomUserRepository;
     private final MongoTemplate mongoTemplate;

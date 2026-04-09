@@ -4,7 +4,7 @@ import static com.project.market_service.chatroom.domain.QChatRoom.chatRoom;
 import static com.project.market_service.product.domain.QProduct.product;
 
 import com.project.market_service.chatroom.application.dto.ChatRoomParticipants;
-import com.project.market_service.chatroom.application.port.out.ChatRoomRepository;
+import com.project.market_service.chatroom.application.port.out.ChatRoomPort;
 import com.project.market_service.chatroom.domain.ChatRoom;
 import com.project.market_service.chatroom.presentation.dto.ChatRoomResponse;
 import com.project.market_service.user.domain.QUser;
@@ -19,7 +19,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-public class ChatRoomPersistenceAdapter implements ChatRoomRepository {
+public class ChatRoomPersistenceAdapter implements ChatRoomPort {
 
     private final JpaChatRoomRepository jpaChatRoomRepository;
     private final JPAQueryFactory queryFactory;

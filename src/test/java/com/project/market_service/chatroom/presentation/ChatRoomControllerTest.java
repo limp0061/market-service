@@ -7,16 +7,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.project.market_service.category.application.port.out.CategoryPort;
 import com.project.market_service.category.domain.Category;
-import com.project.market_service.category.domain.CategoryRepository;
-import com.project.market_service.chatroom.application.port.out.ChatRoomRepository;
+import com.project.market_service.chatroom.application.port.out.ChatRoomPort;
 import com.project.market_service.chatroom.domain.ChatRoom;
 import com.project.market_service.chatroom.presentation.dto.ChatRoomCreatRequest;
 import com.project.market_service.common.security.jwt.JwtUserInfo;
 import com.project.market_service.config.IntegrationTestBase;
+import com.project.market_service.product.application.port.out.ProductPort;
 import com.project.market_service.product.domain.Product;
-import com.project.market_service.product.domain.ProductRepository;
-import com.project.market_service.user.application.port.out.UserRepository;
+import com.project.market_service.user.application.port.out.UserPort;
 import com.project.market_service.user.domain.User;
 import com.project.market_service.user.domain.UserRole;
 import java.math.BigDecimal;
@@ -34,13 +34,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 class ChatRoomControllerTest extends IntegrationTestBase {
 
     @Autowired
-    private UserRepository userRepository;
+    private UserPort userPort;
     @Autowired
-    private CategoryRepository categoryRepository;
+    private CategoryPort categoryPort;
     @Autowired
-    private ProductRepository productRepository;
+    private ProductPort productPort;
     @Autowired
-    private ChatRoomRepository chatRoomRepository;
+    private ChatRoomPort chatRoomPort;
 
     User buyer;
     User seller;
@@ -51,15 +51,15 @@ class ChatRoomControllerTest extends IntegrationTestBase {
     void setUp() throws Exception {
         buyer = User.signUp("구매자", "buyerId", "password1234!");
         seller = User.signUp("판매자", "sellerId", "password1234!");
-        userRepository.saveAll(List.of(buyer, seller));
+        userPort.saveAll(List.of(buyer, seller));
 
         category = Category.create("전자기기");
-        categoryRepository.save(category);
+        categoryPort.save(category);
 
         product = Product.create(seller, category, "아이폰 S6", "거의 새거입니다.", new BigDecimal("1200000"),
                 null, createPoint(126.9725, 37.5565), "서울 중구 봉래동");
 
-        productRepository.save(product);
+        productPort.save(product);
 
         login(buyer);
     }
@@ -89,18 +89,18 @@ class ChatRoomControllerTest extends IntegrationTestBase {
         User buyerA = User.signUp("구매자A", "buyerAId", "password1234!");
         User buyerB = User.signUp("구매자B", "buyerBId", "password1234!");
         User buyerC = User.signUp("구매자C", "buyerCId", "password1234!");
-        userRepository.saveAll(List.of(sellerA, buyerA, buyerB, buyerC));
+        userPort.saveAll(List.of(sellerA, buyerA, buyerB, buyerC));
 
         Product product2 = Product.create(sellerA, category, "아이폰 S6", "거의 새거입니다.", new BigDecimal("1200000"),
                 null, createPoint(126.9725, 37.5565), "서울 중구 봉래동");
-        productRepository.save(product2);
+        productPort.save(product2);
 
         ChatRoom chatRoomA = ChatRoom.create(product, buyer, seller);
         ChatRoom chatRoomB = ChatRoom.create(product, buyerA, seller);
         ChatRoom chatRoomC = ChatRoom.create(product, buyerB, seller);
         ChatRoom chatRoomD = ChatRoom.create(product2, buyer, sellerA);
         ChatRoom chatRoomE = ChatRoom.create(product2, seller, sellerA);
-        chatRoomRepository.saveAll(List.of(chatRoomA, chatRoomB, chatRoomC, chatRoomD, chatRoomE));
+        chatRoomPort.saveAll(List.of(chatRoomA, chatRoomB, chatRoomC, chatRoomD, chatRoomE));
 
         mockMvc.perform(get("/api/v1/chatrooms"))
                 .andExpect(status().isOk())

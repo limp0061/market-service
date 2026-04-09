@@ -8,12 +8,12 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
 import com.project.market_service.category.domain.Category;
+import com.project.market_service.product.application.port.out.ProductPort;
 import com.project.market_service.product.domain.Product;
-import com.project.market_service.product.domain.ProductRepository;
-import com.project.market_service.user.application.port.out.UserRepository;
+import com.project.market_service.user.application.port.out.UserPort;
 import com.project.market_service.user.domain.User;
+import com.project.market_service.wish.application.port.out.WishPort;
 import com.project.market_service.wish.domain.Wish;
-import com.project.market_service.wish.domain.WishRepository;
 import com.project.market_service.wish.presentation.dto.ToggleWishResponse;
 import java.math.BigDecimal;
 import java.util.List;
@@ -31,13 +31,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class WishServiceTest {
 
     @Mock
-    WishRepository wishRepository;
+    WishPort wishPort;
 
     @Mock
-    ProductRepository productRepository;
+    ProductPort productPort;
 
     @Mock
-    UserRepository userRepository;
+    UserPort userPort;
 
     @InjectMocks
     private WishService wishService;
@@ -62,17 +62,17 @@ class WishServiceTest {
     @DisplayName("상품을 위시리스트에 추가한다")
     void doWish() {
         // given
-        given(productRepository.findByIdWithLock(anyLong())).willReturn(Optional.of(product));
-        given(userRepository.findById(anyLong())).willReturn(Optional.of(user));
-        given(wishRepository.findByProductIdAndUserId(anyLong(), anyLong())).willReturn(Optional.empty());
+        given(productPort.findByIdWithLock(anyLong())).willReturn(Optional.of(product));
+        given(userPort.findById(anyLong())).willReturn(Optional.of(user));
+        given(wishPort.findByProductIdAndUserId(anyLong(), anyLong())).willReturn(Optional.empty());
 
         // when
         ToggleWishResponse response = wishService.toggleWish(1L, 1L);
 
         //then
         assertThat(response.isWished()).isTrue();
-        then(wishRepository).should().save(any(Wish.class));
-        then(productRepository).should().increaseWishCount(anyLong());
+        then(wishPort).should().save(any(Wish.class));
+        then(productPort).should().increaseWishCount(anyLong());
     }
 
     @Test
@@ -81,16 +81,16 @@ class WishServiceTest {
 
         Wish wish = Wish.create(user, product);
         // given
-        given(productRepository.findByIdWithLock(anyLong())).willReturn(Optional.of(product));
-        given(userRepository.findById(anyLong())).willReturn(Optional.of(user));
-        given(wishRepository.findByProductIdAndUserId(anyLong(), anyLong())).willReturn(Optional.of(wish));
+        given(productPort.findByIdWithLock(anyLong())).willReturn(Optional.of(product));
+        given(userPort.findById(anyLong())).willReturn(Optional.of(user));
+        given(wishPort.findByProductIdAndUserId(anyLong(), anyLong())).willReturn(Optional.of(wish));
 
         // when
         ToggleWishResponse response = wishService.toggleWish(1L, 1L);
 
         //then
         assertThat(response.isWished()).isFalse();
-        then(wishRepository).should().delete(wish);
-        then(productRepository).should().decreaseWishCount(anyLong());
+        then(wishPort).should().delete(wish);
+        then(productPort).should().decreaseWishCount(anyLong());
     }
 }

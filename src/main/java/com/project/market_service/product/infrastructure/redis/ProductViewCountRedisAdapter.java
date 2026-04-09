@@ -1,4 +1,4 @@
-package com.project.market_service.product.application.service;
+package com.project.market_service.product.infrastructure.redis;
 
 
 import static com.project.market_service.common.constants.RedisConstants.LOCKED;
@@ -11,20 +11,22 @@ import static com.project.market_service.common.constants.RedisConstants.VIEWED;
 
 import com.project.market_service.common.constants.RedisConstants;
 import com.project.market_service.common.redis.RedisManager;
+import com.project.market_service.product.application.port.in.ViewCountCache;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-@Service
+@Component
 @RequiredArgsConstructor
-public class ProductViewCountService {
+public class ProductViewCountRedisAdapter implements ViewCountCache {
 
     private final RedisManager redisManager;
 
+    @Override
     public long increaseViewCount(Long productId, Long userId) {
         String userViewKey = String.format(PRODUCT_USER_VIEW, productId, userId);
         String viewCountKey = String.format(PRODUCT_VIEW_COUNT, productId);
@@ -39,6 +41,7 @@ public class ProductViewCountService {
         return count == null ? 0 : Long.parseLong(count);
     }
 
+    @Override
     public Map<Long, Long> getViewCounts() {
 
         Map<Long, Long> productViewCounts = new HashMap<>();
@@ -50,18 +53,22 @@ public class ProductViewCountService {
         return productViewCounts;
     }
 
+    @Override
     public boolean acquireLock() {
         return redisManager.setIfAbsent(PRODUCT_VIEW_SCHEDULE_LOCK, LOCKED, 7, TimeUnit.MINUTES);
     }
 
+    @Override
     public void releaseLock() {
         redisManager.delete(RedisConstants.PRODUCT_VIEW_SCHEDULE_LOCK);
     }
+
 
     private String extractProductId(String key) {
         return key.split(":")[1];
     }
 
+    @Override
     public void deleteViewCountKeys(Set<Long> productIds) {
         List<String> keys = productIds.stream()
                 .map(id -> String.format(RedisConstants.PRODUCT_VIEW_COUNT, id))

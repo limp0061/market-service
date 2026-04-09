@@ -1,6 +1,6 @@
 package com.project.market_service.category.presentation;
 
-import com.project.market_service.category.application.service.CategoryService;
+import com.project.market_service.category.application.port.in.CategoryUseCase;
 import com.project.market_service.category.presentation.dto.CategoryResponse;
 import com.project.market_service.category.presentation.dto.CategorySaveRequest;
 import com.project.market_service.common.dto.ApiResult;
@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 public class CategoryController {
 
-    private final CategoryService categoryService;
+    private final CategoryUseCase categoryUseCase;
 
     @Operation(summary = "카테고리 등록")
     @ApiResponse(responseCode = "201", description = "카테고리 등록 성공")
@@ -37,7 +37,7 @@ public class CategoryController {
             @Valid @RequestBody CategorySaveRequest request
     ) {
         return ResponseEntity.status(HttpStatus.CREATED).body(
-                ApiResult.success(categoryService.saveCategory(request))
+                ApiResult.success(categoryUseCase.saveCategory(request))
         );
     }
 
@@ -49,7 +49,7 @@ public class CategoryController {
             @PathVariable @Positive(message = "올바른 카테고리 ID 형식이 아닙니다") Long id
     ) {
         return ResponseEntity.ok().body(
-                ApiResult.success(categoryService.updateCategory(request, id))
+                ApiResult.success(categoryUseCase.updateCategory(request, id))
         );
     }
 
@@ -59,7 +59,7 @@ public class CategoryController {
     public ResponseEntity<ApiResult<Void>> deleteCategory(
             @PathVariable @Positive(message = "올바른 카테고리 ID 형식이 아닙니다") Long id
     ) {
-        categoryService.deleteCategory(id);
+        categoryUseCase.deleteCategory(id);
         return ResponseEntity.ok(ApiResult.success(null));
     }
 }

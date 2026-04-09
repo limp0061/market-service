@@ -1,7 +1,7 @@
 package com.project.market_service.category.application.service;
 
 import com.project.market_service.category.domain.Category;
-import com.project.market_service.category.domain.CategoryRepository;
+import com.project.market_service.category.application.port.out.CategoryPort;
 import com.project.market_service.category.exception.CategoryErrorCode;
 import com.project.market_service.common.exception.DuplicateException;
 import com.project.market_service.common.exception.InvalidValueException;
@@ -14,10 +14,10 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class CategoryValidator {
 
-    private final CategoryRepository categoryRepository;
+    private final CategoryPort categoryPort;
 
     public void validateDuplicateCategoryName(String name) {
-        if (categoryRepository.existsByName(name)) {
+        if (categoryPort.existsByName(name)) {
             throw new DuplicateException(CategoryErrorCode.DUPLICATE_CATEGORY, "CategoryName: " + name);
         }
     }

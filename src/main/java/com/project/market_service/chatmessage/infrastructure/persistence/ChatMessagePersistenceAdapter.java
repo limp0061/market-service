@@ -1,6 +1,6 @@
 package com.project.market_service.chatmessage.infrastructure.persistence;
 
-import com.project.market_service.chatmessage.application.port.out.ChatMessageRepository;
+import com.project.market_service.chatmessage.application.port.out.ChatMessagePort;
 import com.project.market_service.chatmessage.domain.ChatMessage;
 import com.project.market_service.chatmessage.presentation.dto.ChatPagingRequest;
 import java.util.List;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-public class ChatMessagePersistenceAdapter implements ChatMessageRepository {
+public class ChatMessagePersistenceAdapter implements ChatMessagePort {
 
     private final MongoChatMessageRepository mongoRepository;
     private final MongoTemplate mongoTemplate;

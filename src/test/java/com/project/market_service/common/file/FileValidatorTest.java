@@ -7,6 +7,7 @@ import static org.mockito.BDDMockito.given;
 
 import com.project.market_service.common.exception.CommonErrorCode;
 import com.project.market_service.common.exception.InvalidValueException;
+import com.project.market_service.common.infrastructure.file.FileValidator;
 import com.project.market_service.common.util.UuidGenerator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

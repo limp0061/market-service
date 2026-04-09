@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.Cursor;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -89,4 +90,10 @@ public class RedisManager {
         stringRedisTemplate.delete(keys);
     }
 
+    public void flushAll() {
+        redisTemplate.execute((RedisCallback<Object>) connection -> {
+            connection.serverCommands().flushAll();
+            return null;
+        });
+    }
 }

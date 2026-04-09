@@ -3,7 +3,7 @@ package com.project.market_service.product.presentation;
 import com.project.market_service.common.dto.ApiResult;
 import com.project.market_service.common.dto.PageResponse;
 import com.project.market_service.common.security.jwt.JwtUserInfo;
-import com.project.market_service.product.application.service.ProductService;
+import com.project.market_service.product.application.port.in.ProductUseCase;
 import com.project.market_service.product.presentation.dto.ProductDetailResponse;
 import com.project.market_service.product.presentation.dto.ProductResponse;
 import com.project.market_service.product.presentation.dto.ProductSaveRequest;
@@ -49,7 +49,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Validated
 public class ProductController {
 
-    private final ProductService productService;
+    private final ProductUseCase productUseCase;
 
     @Operation(summary = "상품 등록")
     @ApiResponse(responseCode = "201", description = "상품 등록 성공")
@@ -60,7 +60,7 @@ public class ProductController {
             @AuthenticationPrincipal JwtUserInfo userInfo
     ) {
         return ResponseEntity.status(HttpStatus.CREATED).body(
-                ApiResult.success(productService.saveProduct(request, images, userInfo.userId()))
+                ApiResult.success(productUseCase.saveProduct(request, images, userInfo.userId()))
         );
     }
 
@@ -74,7 +74,7 @@ public class ProductController {
             @AuthenticationPrincipal JwtUserInfo userInfo
     ) {
         return ResponseEntity.ok().body(
-                ApiResult.success(productService.updateProduct(id, request, images, userInfo.userId()))
+                ApiResult.success(productUseCase.updateProduct(id, request, images, userInfo.userId()))
         );
     }
 
@@ -85,7 +85,7 @@ public class ProductController {
             @PathVariable Long id,
             @AuthenticationPrincipal JwtUserInfo userInfo
     ) {
-        productService.deleteProduct(id, userInfo.userId());
+        productUseCase.deleteProduct(id, userInfo.userId());
         return ResponseEntity.ok().body(
                 ApiResult.success(null)
         );
@@ -100,7 +100,7 @@ public class ProductController {
             @AuthenticationPrincipal JwtUserInfo userInfo
     ) {
         return ResponseEntity.ok().body(
-                ApiResult.success(productService.updateProductStatus(id, request, userInfo.userId()))
+                ApiResult.success(productUseCase.updateProductStatus(id, request, userInfo.userId()))
         );
     }
 
@@ -112,7 +112,7 @@ public class ProductController {
             @PageableDefault(size = 10, sort = "createdAt", direction = Direction.DESC) Pageable pageable,
             @Valid @ModelAttribute ProductSearchRequest request
     ) {
-        Page<ProductResponse> products = productService.getProducts(request, pageable);
+        Page<ProductResponse> products = productUseCase.getProducts(request, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(
                 ApiResult.success(PageResponse.from(products))
         );
@@ -128,7 +128,7 @@ public class ProductController {
             @AuthenticationPrincipal JwtUserInfo userInfo
     ) {
         return ResponseEntity.ok().body(
-                ApiResult.success(productService.getProductDetail(id, curLat, curLng, userInfo.userId()))
+                ApiResult.success(productUseCase.getProductDetail(id, curLat, curLng, userInfo.userId()))
         );
     }
 }

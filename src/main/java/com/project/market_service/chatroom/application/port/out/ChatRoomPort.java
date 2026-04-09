@@ -6,7 +6,7 @@ import com.project.market_service.chatroom.presentation.dto.ChatRoomResponse;
 import java.util.List;
 import java.util.Optional;
 
-public interface ChatRoomRepository {
+public interface ChatRoomPort {
     Optional<ChatRoom> findByProductIdAndBuyerId(Long productId, Long buyerId);
 
     ChatRoom save(ChatRoom chatRoom);

@@ -11,23 +11,23 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
 
 import com.project.market_service.auth.exception.AuthErrorCode;
+import com.project.market_service.category.application.port.out.CategoryPort;
 import com.project.market_service.category.domain.Category;
-import com.project.market_service.category.domain.CategoryRepository;
 import com.project.market_service.category.exception.CategoryErrorCode;
+import com.project.market_service.common.application.port.out.FilePort;
 import com.project.market_service.common.exception.EntityNotFoundException;
 import com.project.market_service.common.exception.InvalidStateException;
 import com.project.market_service.common.exception.UnAuthorizationException;
-import com.project.market_service.common.file.FileService;
+import com.project.market_service.product.application.port.out.ProductPort;
 import com.project.market_service.product.domain.Product;
 import com.project.market_service.product.domain.ProductImage;
-import com.project.market_service.product.domain.ProductRepository;
 import com.project.market_service.product.domain.ProductStatus;
 import com.project.market_service.product.exception.ProductErrorCode;
 import com.project.market_service.product.presentation.dto.ProductSaveResponse;
 import com.project.market_service.product.presentation.dto.ProductUpdateRequest;
 import com.project.market_service.product.presentation.dto.UpdateProductStatusRequest;
 import com.project.market_service.product.presentation.dto.UpdateProductStatusResponse;
-import com.project.market_service.user.application.port.out.UserRepository;
+import com.project.market_service.user.application.port.out.UserPort;
 import com.project.market_service.user.domain.User;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -48,13 +48,13 @@ import org.springframework.web.multipart.MultipartFile;
 class ProductUpdateServiceTest {
 
     @Mock
-    private UserRepository userRepository;
+    private UserPort userPort;
     @Mock
-    private CategoryRepository categoryRepository;
+    private CategoryPort categoryPort;
     @Mock
-    private ProductRepository productRepository;
+    private ProductPort productPort;
     @Mock
-    private FileService fileService;
+    private FilePort filePort;
 
     @InjectMocks
     private ProductService productService;
@@ -85,8 +85,8 @@ class ProductUpdateServiceTest {
     void updateProduct_success() {
         // given
         Long productId = 100L;
-        given(productRepository.findById(productId)).willReturn(Optional.of(product));
-        given(fileService.uploadProductImage(anyList()))
+        given(productPort.findById(productId)).willReturn(Optional.of(product));
+        given(filePort.uploadProductImage(anyList()))
                 .willReturn(new ArrayList<>(List.of("new1.jpg", "new2.jpg")));
 
         MockMultipartFile file1 = new MockMultipartFile("test1", "test1.jpg", "image/jpeg", "test1".getBytes());
@@ -110,15 +110,15 @@ class ProductUpdateServiceTest {
     @DisplayName("상품이 존재하지 않으면 수정에 실패한다")
     void updateProduct_fail_productNotFound() {
         // given
-        given(productRepository.findById(anyLong())).willReturn(Optional.empty());
+        given(productPort.findById(anyLong())).willReturn(Optional.empty());
 
         // when & then
         assertThatThrownBy(() -> productService.updateProduct(100L, request, List.of(), 1L))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessage(ProductErrorCode.PRODUCT_NOT_FOUND.getMessage());
 
-        then(categoryRepository).should(never()).findById(anyLong());
-        then(fileService).should(never()).uploadProductImage(anyList());
+        then(categoryPort).should(never()).findById(anyLong());
+        then(filePort).should(never()).uploadProductImage(anyList());
     }
 
     @Test
@@ -126,8 +126,8 @@ class ProductUpdateServiceTest {
     void updateProduct_fail_categoryNotFound() {
         // given
         Long newCategoryId = 2L;
-        given(productRepository.findById(100L)).willReturn(Optional.of(product));
-        given(categoryRepository.findById(newCategoryId)).willReturn(Optional.empty());
+        given(productPort.findById(100L)).willReturn(Optional.of(product));
+        given(categoryPort.findById(newCategoryId)).willReturn(Optional.empty());
 
         ProductUpdateRequest differentCategoryRequest = new ProductUpdateRequest(
                 newCategoryId,
@@ -140,8 +140,8 @@ class ProductUpdateServiceTest {
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessage(CategoryErrorCode.CATEGORY_NOT_FOUND.getMessage());
 
-        then(categoryRepository).should().findById(newCategoryId);
-        then(fileService).should(never()).uploadProductImage(anyList());
+        then(categoryPort).should().findById(newCategoryId);
+        then(filePort).should(never()).uploadProductImage(anyList());
     }
 
     @Test
@@ -149,7 +149,7 @@ class ProductUpdateServiceTest {
     void updateProduct_fail_forbidden() {
         Long productId = 100L;
         Long otherUserId = 999L;
-        given(productRepository.findById(productId)).willReturn(Optional.of(product));
+        given(productPort.findById(productId)).willReturn(Optional.of(product));
 
         // when & then
         assertThatThrownBy(() -> productService.updateProduct(productId, request, List.of(), otherUserId))
@@ -164,7 +164,7 @@ class ProductUpdateServiceTest {
     void updateProductStatus_success() {
         // given
         Long productId = 100L;
-        given(productRepository.findById(productId)).willReturn(Optional.of(product));
+        given(productPort.findById(productId)).willReturn(Optional.of(product));
         UpdateProductStatusRequest updateStatusRequest = new UpdateProductStatusRequest(ProductStatus.RESERVED);
 
         // when
@@ -183,7 +183,7 @@ class ProductUpdateServiceTest {
     void updateProductStatus_fail_invalidStatus() {
         // given
         Long productId = 100L;
-        given(productRepository.findById(productId)).willReturn(Optional.of(product));
+        given(productPort.findById(productId)).willReturn(Optional.of(product));
         UpdateProductStatusRequest updateStatusRequest = new UpdateProductStatusRequest(ProductStatus.SOLD);
 
         // when & then

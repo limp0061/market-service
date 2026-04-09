@@ -13,15 +13,15 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
 import com.project.market_service.chatroom.application.port.out.ChatRoomCache;
-import com.project.market_service.chatroom.application.port.out.ChatRoomRepository;
-import com.project.market_service.chatroom.application.port.out.ChatRoomUserRepository;
+import com.project.market_service.chatroom.application.port.out.ChatRoomPort;
+import com.project.market_service.chatroom.application.port.out.ChatRoomUserPort;
 import com.project.market_service.chatroom.domain.ChatRoom;
 import com.project.market_service.chatroom.exception.ChatRoomErrorCode;
 import com.project.market_service.chatroom.presentation.dto.ChatRoomResponse;
 import com.project.market_service.common.exception.InvalidValueException;
+import com.project.market_service.product.application.port.out.ProductPort;
 import com.project.market_service.product.domain.Product;
-import com.project.market_service.product.domain.ProductRepository;
-import com.project.market_service.user.application.port.out.UserRepository;
+import com.project.market_service.user.application.port.out.UserPort;
 import com.project.market_service.user.domain.User;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,19 +37,19 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class ChatRoomServiceTest {
 
     @Mock
-    private ChatRoomRepository chatRoomRepository;
+    private ChatRoomPort chatRoomPort;
 
     @Mock
-    private UserRepository userRepository;
+    private UserPort userPort;
 
     @Mock
-    private ProductRepository productRepository;
+    private ProductPort productPort;
 
     @Mock
     private ChatRoomCache chatRoomCache;
 
     @Mock
-    private ChatRoomUserRepository chatRoomUserRepository;
+    private ChatRoomUserPort chatRoomUserPort;
 
     @InjectMocks
     private ChatRoomService chatRoomService;
@@ -80,11 +80,11 @@ class ChatRoomServiceTest {
                 .seller(seller)
                 .build();
 
-        given(chatRoomRepository.findByProductIdAndBuyerId(product.getId(), buyer.getId())).willReturn(
+        given(chatRoomPort.findByProductIdAndBuyerId(product.getId(), buyer.getId())).willReturn(
                 Optional.empty());
-        given(productRepository.findById(product.getId())).willReturn(Optional.of(product));
-        given(userRepository.findById(buyer.getId())).willReturn(Optional.of(buyer));
-        given(chatRoomRepository.save(any(ChatRoom.class)))
+        given(productPort.findById(product.getId())).willReturn(Optional.of(product));
+        given(userPort.findById(buyer.getId())).willReturn(Optional.of(buyer));
+        given(chatRoomPort.save(any(ChatRoom.class)))
                 .willReturn(savedRoom);
 
         // when
@@ -94,8 +94,8 @@ class ChatRoomServiceTest {
         assertThat(response.chatRoomId()).isEqualTo(200L);
 
         ArgumentCaptor<ChatRoom> chatRoomCaptor = ArgumentCaptor.forClass(ChatRoom.class);
-        then(chatRoomRepository).should().save(chatRoomCaptor.capture());
-        then(chatRoomUserRepository).should(times(1)).saveAllChatRoomUser(anyList());
+        then(chatRoomPort).should().save(chatRoomCaptor.capture());
+        then(chatRoomUserPort).should(times(1)).saveAllChatRoomUser(anyList());
 
         ChatRoom captured = chatRoomCaptor.getValue();
         assertAll(
@@ -117,7 +117,7 @@ class ChatRoomServiceTest {
                 .seller(seller)
                 .build();
 
-        given(chatRoomRepository.findByProductIdAndBuyerId(product.getId(), buyer.getId())).willReturn(
+        given(chatRoomPort.findByProductIdAndBuyerId(product.getId(), buyer.getId())).willReturn(
                 Optional.of(existing));
 
         // when
@@ -132,9 +132,9 @@ class ChatRoomServiceTest {
                 () -> assertThat(response.productName()).isEqualTo("맥북 프로")
         );
 
-        then(chatRoomRepository).should(never()).save(any());
+        then(chatRoomPort).should(never()).save(any());
         then(chatRoomCache).should(never()).addParticipants(anyLong(), anyLong(), anyLong());
-        then(chatRoomUserRepository).should(never()).saveAllChatRoomUser(anyList());
+        then(chatRoomUserPort).should(never()).saveAllChatRoomUser(anyList());
     }
 
     @Test
@@ -147,17 +147,17 @@ class ChatRoomServiceTest {
                 .user(seller)
                 .build();
 
-        given(chatRoomRepository.findByProductIdAndBuyerId(product.getId(), buyer.getId())).willReturn(
+        given(chatRoomPort.findByProductIdAndBuyerId(product.getId(), buyer.getId())).willReturn(
                 Optional.empty());
-        given(productRepository.findById(product.getId())).willReturn(Optional.of(product));
+        given(productPort.findById(product.getId())).willReturn(Optional.of(product));
 
         // when & then
         assertThatThrownBy(() -> chatRoomService.createChatRoom(product.getId(), buyer.getId()))
                 .isInstanceOf(InvalidValueException.class)
                 .hasMessage(ChatRoomErrorCode.CANNOT_CHAT_WITH_SELF.getMessage());
 
-        then(userRepository).should(never()).findById(anyLong());
-        then(chatRoomRepository).should(never()).save(any(ChatRoom.class));
+        then(userPort).should(never()).findById(anyLong());
+        then(chatRoomPort).should(never()).save(any(ChatRoom.class));
     }
 
 }

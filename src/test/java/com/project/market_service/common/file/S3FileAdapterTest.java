@@ -12,6 +12,9 @@ import static org.mockito.Mockito.times;
 
 import com.project.market_service.common.exception.CommonErrorCode;
 import com.project.market_service.common.exception.InvalidValueException;
+import com.project.market_service.common.infrastructure.file.FileValidator;
+import com.project.market_service.common.infrastructure.file.S3FileAdapter;
+import com.project.market_service.common.infrastructure.file.S3StorageManager;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,7 +26,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 @ExtendWith(MockitoExtension.class)
-class FileServiceTest {
+class S3FileAdapterTest {
 
     @Mock
     FileValidator fileValidator;
@@ -31,7 +34,7 @@ class FileServiceTest {
     S3StorageManager s3StorageManager;
 
     @InjectMocks
-    private FileService fileService;
+    private S3FileAdapter s3FileAdapter;
 
     @Test
     @DisplayName("파일 업로드 시 파일 업로드에 성공한다")
@@ -44,7 +47,7 @@ class FileServiceTest {
         given(s3StorageManager.getPublicUrl(anyString())).willReturn("https://s3.bucket/test.jpg");
 
         // when
-        List<String> result = fileService.uploadProductImage(images);
+        List<String> result = s3FileAdapter.uploadProductImage(images);
 
         // then
         assertThat(result).hasSize(2);
@@ -56,7 +59,7 @@ class FileServiceTest {
     @DisplayName("빈 리스트 전달 시 빈 리스트를 반환한다")
     void uploadProductImage_emptyList() {
         // when
-        List<String> result = fileService.uploadProductImage(List.of());
+        List<String> result = s3FileAdapter.uploadProductImage(List.of());
 
         // then
         assertThat(result).isEmpty();
@@ -73,7 +76,7 @@ class FileServiceTest {
                 .given(fileValidator).validateImage(any());
 
         // when & then
-        assertThatThrownBy(() -> fileService.uploadProductImage(List.of(invalidFile)))
+        assertThatThrownBy(() -> s3FileAdapter.uploadProductImage(List.of(invalidFile)))
                 .isInstanceOf(InvalidValueException.class);
 
         then(s3StorageManager).should(never()).upload(anyString(), any());

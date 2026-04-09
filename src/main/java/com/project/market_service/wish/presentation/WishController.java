@@ -3,7 +3,7 @@ package com.project.market_service.wish.presentation;
 import com.project.market_service.common.dto.ApiResult;
 import com.project.market_service.common.dto.PageResponse;
 import com.project.market_service.common.security.jwt.JwtUserInfo;
-import com.project.market_service.wish.application.service.WishService;
+import com.project.market_service.wish.application.port.in.WishUseCase;
 import com.project.market_service.wish.presentation.dto.ToggleWishResponse;
 import com.project.market_service.wish.presentation.dto.WishResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class WishController {
 
-    private final WishService wishService;
+    private final WishUseCase wishUseCase;
 
     @Operation(summary = "찜 토글")
     @ApiResponse(responseCode = "200", description = "찜 토글 변경")
@@ -38,7 +38,7 @@ public class WishController {
             @AuthenticationPrincipal JwtUserInfo userInfo
     ) {
         return ResponseEntity.ok().body(
-                ApiResult.success(wishService.toggleWish(id, userInfo.userId()))
+                ApiResult.success(wishUseCase.toggleWish(id, userInfo.userId()))
         );
     }
 
@@ -51,6 +51,6 @@ public class WishController {
             @AuthenticationPrincipal JwtUserInfo userInfo
     ) {
         return ResponseEntity.ok().body(
-                ApiResult.success(PageResponse.from(wishService.getWishProducts(userInfo.userId(), pageable))));
+                ApiResult.success(PageResponse.from(wishUseCase.getWishProducts(userInfo.userId(), pageable))));
     }
 }

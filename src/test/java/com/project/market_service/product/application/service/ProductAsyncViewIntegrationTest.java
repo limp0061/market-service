@@ -3,16 +3,18 @@ package com.project.market_service.product.application.service;
 import static com.project.market_service.common.util.GeoUtils.createPoint;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.project.market_service.category.application.port.out.CategoryPort;
 import com.project.market_service.category.domain.Category;
-import com.project.market_service.category.domain.CategoryRepository;
 import com.project.market_service.common.constants.RedisConstants;
 import com.project.market_service.common.redis.RedisManager;
 import com.project.market_service.common.security.jwt.JwtUserInfo;
+import com.project.market_service.config.IntegrationTestBase;
+import com.project.market_service.product.application.port.out.ProductPort;
 import com.project.market_service.product.domain.Product;
-import com.project.market_service.product.domain.ProductRepository;
-import com.project.market_service.user.application.port.out.UserRepository;
+import com.project.market_service.user.application.port.out.UserPort;
 import com.project.market_service.user.domain.User;
 import com.project.market_service.user.domain.UserRole;
+import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -32,18 +34,20 @@ import org.springframework.test.context.ActiveProfiles;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class ProductAsyncViewIntegrationTest {
+class ProductAsyncViewIntegrationTest extends IntegrationTestBase {
 
     @Autowired
     private ProductAsyncViewService productAsyncViewService;
     @Autowired
     private RedisManager redisManager;
     @Autowired
-    private ProductRepository productRepository;
+    private ProductPort productPort;
     @Autowired
-    private UserRepository userRepository;
+    private UserPort userPort;
     @Autowired
-    private CategoryRepository categoryRepository;
+    private CategoryPort categoryPort;
+    @Autowired
+    private EntityManager entityManager;
 
     Long productId;
     Long userId;
@@ -51,16 +55,16 @@ class ProductAsyncViewIntegrationTest {
     @BeforeEach
     void setUp() {
         User user = User.signUp("user_test", "user_test", "password1234!");
-        userRepository.save(user);
+        userPort.save(user);
         userId = user.getId();
 
         Category category = Category.create("카테고리");
-        categoryRepository.save(category);
+        categoryPort.save(category);
 
         Product product = Product.create(user, category, "아이폰 15 프로", "거의 새거입니다.", new BigDecimal("1200000"),
                 null, createPoint(126.9725, 37.5565), "서울 중구 봉래동");
 
-        productRepository.save(product);
+        productPort.save(product);
         productId = product.getId();
 
         JwtUserInfo userInfo = new JwtUserInfo(user.getId(), "user_test", UserRole.USER.getCode());
@@ -83,8 +87,11 @@ class ProductAsyncViewIntegrationTest {
         // when
         productAsyncViewService.asyncViewProcess();
 
+        entityManager.flush();
+        entityManager.clear();
+
         // then
-        Product updatedProduct = productRepository.findById(productId).orElseThrow();
+        Product updatedProduct = productPort.findById(productId).orElseThrow();
 
         assertThat(updatedProduct.getViewCount()).isEqualTo(103);
 
@@ -95,12 +102,11 @@ class ProductAsyncViewIntegrationTest {
     @AfterEach
     void tearDown() {
         // DB 정리
-        productRepository.deleteAll();
-        userRepository.deleteAll();
+        productPort.deleteAll();
+        userPort.deleteAll();
 
         // Redis 정리
         redisManager.delete(String.format(RedisConstants.PRODUCT_VIEW_COUNT, productId));
         redisManager.delete(RedisConstants.PRODUCT_VIEW_SCHEDULE_LOCK);
     }
-
 }
