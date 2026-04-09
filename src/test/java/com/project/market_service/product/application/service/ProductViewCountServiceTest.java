@@ -10,6 +10,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
 import com.project.market_service.common.redis.RedisManager;
+import com.project.market_service.product.infrastructure.redis.ProductViewCountRedisAdapter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -23,7 +24,7 @@ class ProductViewCountServiceTest {
     private RedisManager redisManager;
 
     @InjectMocks
-    private ProductViewCountService productViewCountService;
+    private ProductViewCountRedisAdapter productViewCountService;
 
     @Test
     void increaseViewCount_first_view() {

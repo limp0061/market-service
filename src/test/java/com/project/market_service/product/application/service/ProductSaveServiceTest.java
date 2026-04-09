@@ -11,16 +11,16 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
+import com.project.market_service.category.application.port.out.CategoryPort;
 import com.project.market_service.category.domain.Category;
-import com.project.market_service.category.domain.CategoryRepository;
 import com.project.market_service.category.exception.CategoryErrorCode;
+import com.project.market_service.common.application.port.out.FilePort;
 import com.project.market_service.common.exception.EntityNotFoundException;
-import com.project.market_service.common.file.FileService;
+import com.project.market_service.product.application.port.out.ProductPort;
 import com.project.market_service.product.domain.Product;
-import com.project.market_service.product.domain.ProductRepository;
 import com.project.market_service.product.presentation.dto.ProductSaveRequest;
 import com.project.market_service.product.presentation.dto.ProductSaveResponse;
-import com.project.market_service.user.application.port.out.UserRepository;
+import com.project.market_service.user.application.port.out.UserPort;
 import com.project.market_service.user.domain.User;
 import com.project.market_service.user.domain.UserErrorCode;
 import java.math.BigDecimal;
@@ -41,13 +41,13 @@ import org.springframework.web.multipart.MultipartFile;
 class ProductSaveServiceTest {
 
     @Mock
-    private UserRepository userRepository;
+    private UserPort userPort;
     @Mock
-    private CategoryRepository categoryRepository;
+    private CategoryPort categoryPort;
     @Mock
-    private ProductRepository productRepository;
+    private ProductPort productPort;
     @Mock
-    private FileService fileService;
+    private FilePort filePort;
 
     @InjectMocks
     private ProductService productService;
@@ -76,12 +76,12 @@ class ProductSaveServiceTest {
         MockMultipartFile file2 = new MockMultipartFile("test2", "test2.jpg", "image/jpeg", "test2".getBytes());
         List<MultipartFile> images = List.of(file1, file2);
 
-        given(userRepository.findById(anyLong())).willReturn(Optional.of(user));
-        given(categoryRepository.findById(anyLong())).willReturn(Optional.of(category));
-        given(fileService.uploadProductImage(anyList())).willReturn(List.of("https://url1.png", "https://url2.png"));
+        given(userPort.findById(anyLong())).willReturn(Optional.of(user));
+        given(categoryPort.findById(anyLong())).willReturn(Optional.of(category));
+        given(filePort.uploadProductImage(anyList())).willReturn(List.of("https://url1.png", "https://url2.png"));
 
         Product savedProduct = Product.builder().id(100L).name(request.name()).build();
-        given(productRepository.save(any(Product.class))).willReturn(savedProduct);
+        given(productPort.save(any(Product.class))).willReturn(savedProduct);
 
         ArgumentCaptor<Product> productCaptor = ArgumentCaptor.forClass(Product.class);
 
@@ -89,7 +89,7 @@ class ProductSaveServiceTest {
         ProductSaveResponse response = productService.saveProduct(request, images, 1L);
 
         // then
-        then(productRepository).should().save(productCaptor.capture());
+        then(productPort).should().save(productCaptor.capture());
         Product capturedProduct = productCaptor.getValue();
 
         assertAll(
@@ -99,40 +99,40 @@ class ProductSaveServiceTest {
                 () -> assertThat(capturedProduct.getCategory().getId()).isEqualTo(request.categoryId()),
                 () -> assertThat(capturedProduct.getImages()).hasSize(2)
         );
-        then(fileService).should(times(1)).uploadProductImage(anyList());
+        then(filePort).should(times(1)).uploadProductImage(anyList());
     }
 
     @Test
     @DisplayName("이미지가 포함되지 않은 상품을 저장한다")
     void saveProduct_noImages_success() {
         // given
-        given(userRepository.findById(anyLong())).willReturn(Optional.of(user));
-        given(categoryRepository.findById(anyLong())).willReturn(Optional.of(category));
+        given(userPort.findById(anyLong())).willReturn(Optional.of(user));
+        given(categoryPort.findById(anyLong())).willReturn(Optional.of(category));
 
         Product savedProduct = Product.builder().id(100L).name(request.name()).build();
-        given(productRepository.save(any(Product.class))).willReturn(savedProduct);
+        given(productPort.save(any(Product.class))).willReturn(savedProduct);
 
         // when
         productService.saveProduct(request, List.of(), 1L);
 
         // then
-        then(fileService).should(never()).uploadProductImage(anyList());
-        then(productRepository).should(times(1)).save(any(Product.class));
+        then(filePort).should(never()).uploadProductImage(anyList());
+        then(productPort).should(times(1)).save(any(Product.class));
     }
 
     @Test
     @DisplayName("유저가 존재하지 않으면 저장에 실패한다")
     void saveProduct_fail_userNotFound() {
         // given
-        given(userRepository.findById(anyLong())).willReturn(Optional.empty());
+        given(userPort.findById(anyLong())).willReturn(Optional.empty());
 
         // when & then
         assertThatThrownBy(() -> productService.saveProduct(request, List.of(), 1L))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessage(UserErrorCode.USER_NOT_FOUND.getMessage());
 
-        then(categoryRepository).should(never()).findById(anyLong());
-        then(productRepository).should(never()).save(any());
+        then(categoryPort).should(never()).findById(anyLong());
+        then(productPort).should(never()).save(any());
     }
 
 
@@ -140,15 +140,15 @@ class ProductSaveServiceTest {
     @DisplayName("카테고리가 존재하지 않으면 저장에 실패한다")
     void saveProduct_fail_categoryNotFound() {
         // given
-        given(userRepository.findById(anyLong())).willReturn(Optional.of(user));
-        given(categoryRepository.findById(anyLong())).willReturn(Optional.empty());
+        given(userPort.findById(anyLong())).willReturn(Optional.of(user));
+        given(categoryPort.findById(anyLong())).willReturn(Optional.empty());
 
         // when & then
         assertThatThrownBy(() -> productService.saveProduct(request, List.of(), 1L))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessage(CategoryErrorCode.CATEGORY_NOT_FOUND.getMessage());
 
-        then(userRepository).should(times(1)).findById(anyLong());
-        then(productRepository).should(never()).save(any());
+        then(userPort).should(times(1)).findById(anyLong());
+        then(productPort).should(never()).save(any());
     }
 }

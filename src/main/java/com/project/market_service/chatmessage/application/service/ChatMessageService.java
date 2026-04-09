@@ -1,12 +1,12 @@
 package com.project.market_service.chatmessage.application.service;
 
 import com.project.market_service.chatmessage.application.port.in.ChatMessageUseCase;
-import com.project.market_service.chatmessage.application.port.out.ChatMessageRepository;
+import com.project.market_service.chatmessage.application.port.out.ChatMessagePort;
 import com.project.market_service.chatmessage.domain.ChatMessage;
 import com.project.market_service.chatmessage.presentation.dto.ChatMessageRequest;
 import com.project.market_service.chatmessage.presentation.dto.ChatMessageResponse;
 import com.project.market_service.chatmessage.presentation.dto.ChatPagingRequest;
-import com.project.market_service.chatroom.application.port.out.ChatRoomUserRepository;
+import com.project.market_service.chatroom.application.port.out.ChatRoomUserPort;
 import com.project.market_service.chatroom.application.service.ChatRoomValidator;
 import com.project.market_service.user.application.port.in.UserUseCase;
 import java.util.List;
@@ -21,9 +21,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class ChatMessageService implements ChatMessageUseCase {
 
     private final UserUseCase userUseCase;
-    private final ChatMessageRepository chatMessageRepository;
+    private final ChatMessagePort chatMessagePort;
     private final ChatRoomValidator chatRoomValidator;
-    private final ChatRoomUserRepository chatRoomUserRepository;
+    private final ChatRoomUserPort chatRoomUserPort;
     private final SimpMessagingTemplate messagingTemplate;
 
     @Override
@@ -31,7 +31,7 @@ public class ChatMessageService implements ChatMessageUseCase {
     public void processHandleMessage(ChatMessageRequest request, Long roomId, Long userId) {
 
         ChatMessage chatMessage = ChatMessage.create(roomId, userId, request.content());
-        ChatMessage savedChatMessage = chatMessageRepository.save(chatMessage);
+        ChatMessage savedChatMessage = chatMessagePort.save(chatMessage);
 
         String senderName = userUseCase.getName(userId);
 
@@ -43,12 +43,12 @@ public class ChatMessageService implements ChatMessageUseCase {
     public List<ChatMessageResponse> getChatMessages(ChatPagingRequest request, Long userId) {
         chatRoomValidator.validateUserInRoom(request.roomId(), userId);
 
-        List<ChatMessageResponse> list = chatMessageRepository.findMessagesByRoomId(request)
+        List<ChatMessageResponse> list = chatMessagePort.findMessagesByRoomId(request)
                 .stream()
                 .map(chat -> ChatMessageResponse.of(chat, userUseCase.getName(chat.getSenderId())))
                 .toList();
 
-        chatRoomUserRepository.updateLastReadAt(request.roomId(), userId);
+        chatRoomUserPort.updateLastReadAt(request.roomId(), userId);
 
         return list;
     }

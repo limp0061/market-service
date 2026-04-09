@@ -10,24 +10,21 @@ import com.project.market_service.auth.exception.AuthErrorCode;
 import com.project.market_service.auth.presentation.dto.LoginRequest;
 import com.project.market_service.auth.presentation.dto.SignUpRequest;
 import com.project.market_service.config.IntegrationTestBase;
-import com.project.market_service.config.TestRedisConfig;
-import com.project.market_service.user.application.port.out.UserRepository;
+import com.project.market_service.user.application.port.out.UserPort;
 import com.project.market_service.user.domain.User;
 import com.project.market_service.user.domain.UserErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MvcResult;
 
-@Import(TestRedisConfig.class)
 class AuthControllerIntegrationTest extends IntegrationTestBase {
 
     @Autowired
-    UserRepository userRepository;
+    UserPort userPort;
     @Autowired
     PasswordEncoder passwordEncoder;
 
@@ -38,7 +35,7 @@ class AuthControllerIntegrationTest extends IntegrationTestBase {
                 "hong1234",
                 passwordEncoder.encode("password1234!")
         );
-        userRepository.save(user);
+        userPort.save(user);
     }
 
     @Test

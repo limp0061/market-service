@@ -1,16 +1,18 @@
-package com.project.market_service.wish.infrastructure;
+package com.project.market_service.wish.infrastructure.persistence;
 
 import static com.project.market_service.common.util.QuerydslUtils.getOrderSpecifier;
 import static com.project.market_service.product.domain.QProduct.product;
 import static com.project.market_service.user.domain.QUser.user;
 import static com.project.market_service.wish.domain.QWish.wish;
 
-import com.project.market_service.wish.domain.WishRepositoryCustom;
+import com.project.market_service.wish.application.port.out.WishPort;
+import com.project.market_service.wish.domain.Wish;
 import com.project.market_service.wish.presentation.dto.WishResponse;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,9 +21,15 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-public class WishRepositoryImpl implements WishRepositoryCustom {
+public class WishPersistenceAdapter implements WishPort {
 
+    private final JpaWishRepository jpaWishRepository;
     private final JPAQueryFactory queryFactory;
+
+    @Override
+    public Optional<Wish> findByProductIdAndUserId(Long productId, Long userId) {
+        return jpaWishRepository.findByProductIdAndUserId(productId, userId);
+    }
 
     @Override
     public Page<WishResponse> getWishProducts(Long userId, Pageable pageable) {
@@ -50,5 +58,15 @@ public class WishRepositoryImpl implements WishRepositoryCustom {
                 .where(wish.user.id.eq(userId));
 
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
+    }
+
+    @Override
+    public Wish save(Wish wish) {
+        return jpaWishRepository.save(wish);
+    }
+
+    @Override
+    public void delete(Wish wish) {
+        jpaWishRepository.delete(wish);
     }
 }

@@ -14,8 +14,8 @@ import com.project.market_service.auth.exception.AuthErrorCode;
 import com.project.market_service.category.domain.Category;
 import com.project.market_service.common.exception.EntityNotFoundException;
 import com.project.market_service.common.exception.UnAuthorizationException;
+import com.project.market_service.product.application.port.out.ProductPort;
 import com.project.market_service.product.domain.Product;
-import com.project.market_service.product.domain.ProductRepository;
 import com.project.market_service.product.domain.ProductStatus;
 import com.project.market_service.product.exception.ProductErrorCode;
 import com.project.market_service.user.domain.User;
@@ -35,7 +35,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class ProductDeleteServiceTest {
 
     @Mock
-    private ProductRepository productRepository;
+    private ProductPort productPort;
 
     @InjectMocks
     private ProductService productService;
@@ -58,7 +58,7 @@ class ProductDeleteServiceTest {
     void deleteProduct_success() {
         // given
         Long productId = 100L;
-        given(productRepository.findById(productId)).willReturn(Optional.of(product));
+        given(productPort.findById(productId)).willReturn(Optional.of(product));
 
         // when
         productService.deleteProduct(productId, 1L);
@@ -68,14 +68,14 @@ class ProductDeleteServiceTest {
                 () -> assertThat(product.isDeleted()).isTrue(),
                 () -> assertThat(product.getStatus()).isEqualTo(ProductStatus.DELETED)
         );
-        then(productRepository).should(never()).delete(any());
+        then(productPort).should(never()).delete(any());
     }
 
     @Test
     @DisplayName("상품이 존재하지 않는 경우 삭제에 실패한다")
     void deleteProduct_fail_productNotFound() {
         // given
-        given(productRepository.findById(anyLong())).willReturn(Optional.empty());
+        given(productPort.findById(anyLong())).willReturn(Optional.empty());
 
         // when & then
         assertThatThrownBy(() -> productService.deleteProduct(100L, 1L))
@@ -91,7 +91,7 @@ class ProductDeleteServiceTest {
         // given
         Long productId = 100L;
         Long otherUserId = 999L;
-        given(productRepository.findById(productId)).willReturn(Optional.of(product));
+        given(productPort.findById(productId)).willReturn(Optional.of(product));
 
         // when & then
         assertThatThrownBy(() -> productService.deleteProduct(productId, otherUserId))

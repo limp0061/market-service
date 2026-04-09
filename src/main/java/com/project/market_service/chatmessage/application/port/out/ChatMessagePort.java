@@ -4,7 +4,7 @@ import com.project.market_service.chatmessage.domain.ChatMessage;
 import com.project.market_service.chatmessage.presentation.dto.ChatPagingRequest;
 import java.util.List;
 
-public interface ChatMessageRepository {
+public interface ChatMessagePort {
 
     ChatMessage save(ChatMessage chatMessage);
 

@@ -10,7 +10,7 @@ import static org.mockito.Mockito.times;
 
 import com.project.market_service.chatroom.application.dto.ChatRoomParticipants;
 import com.project.market_service.chatroom.application.port.out.ChatRoomCache;
-import com.project.market_service.chatroom.application.port.out.ChatRoomRepository;
+import com.project.market_service.chatroom.application.port.out.ChatRoomPort;
 import com.project.market_service.chatroom.exception.ChatRoomErrorCode;
 import com.project.market_service.common.exception.UnAuthorizationException;
 import java.util.Optional;
@@ -27,7 +27,7 @@ class ChatRoomValidatorTest {
     @Mock
     ChatRoomCache chatRoomCache;
     @Mock
-    ChatRoomRepository chatRoomRepository;
+    ChatRoomPort chatRoomPort;
     @InjectMocks
     private ChatRoomValidator chatRoomValidator;
 
@@ -43,7 +43,7 @@ class ChatRoomValidatorTest {
         chatRoomValidator.validateUserInRoom(roomId, userId);
 
         // then
-        then(chatRoomRepository).should(never()).findParticipantsByRoomId(anyLong(), anyLong());
+        then(chatRoomPort).should(never()).findParticipantsByRoomId(anyLong(), anyLong());
         then(chatRoomCache).should(never()).addParticipants(anyLong(), anyLong());
     }
 
@@ -56,13 +56,13 @@ class ChatRoomValidatorTest {
         Long sellerId = 2L;
         ChatRoomParticipants participants = new ChatRoomParticipants(buyerId, sellerId);
         given(chatRoomCache.isUsersInRoom(roomId, buyerId)).willReturn(false);
-        given(chatRoomRepository.findParticipantsByRoomId(roomId, buyerId)).willReturn(Optional.of(participants));
+        given(chatRoomPort.findParticipantsByRoomId(roomId, buyerId)).willReturn(Optional.of(participants));
 
         // when
         chatRoomValidator.validateUserInRoom(roomId, buyerId);
 
         // then
-        then(chatRoomRepository).should(times(1)).findParticipantsByRoomId(roomId, buyerId);
+        then(chatRoomPort).should(times(1)).findParticipantsByRoomId(roomId, buyerId);
         then(chatRoomCache).should(times(1)).addParticipants(eq(roomId), eq(buyerId), eq(sellerId));
     }
 
@@ -73,14 +73,14 @@ class ChatRoomValidatorTest {
         Long roomId = 1L;
         Long userId = 1L;
         given(chatRoomCache.isUsersInRoom(roomId, userId)).willReturn(false);
-        given(chatRoomRepository.findParticipantsByRoomId(roomId, userId)).willReturn(Optional.empty());
+        given(chatRoomPort.findParticipantsByRoomId(roomId, userId)).willReturn(Optional.empty());
 
         // when & then
         assertThatThrownBy(() -> chatRoomValidator.validateUserInRoom(roomId, userId))
                 .isInstanceOf(UnAuthorizationException.class)
                 .hasMessage(ChatRoomErrorCode.NOT_CHATROOM_PARTICIPANT.getMessage());
 
-        then(chatRoomRepository).should(times(1)).findParticipantsByRoomId(roomId, userId);
+        then(chatRoomPort).should(times(1)).findParticipantsByRoomId(roomId, userId);
         then(chatRoomCache).should(never()).addParticipants(anyLong(), anyLong());
     }
 

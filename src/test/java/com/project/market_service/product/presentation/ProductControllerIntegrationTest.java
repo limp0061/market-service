@@ -12,22 +12,24 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.project.market_service.category.application.port.out.CategoryPort;
 import com.project.market_service.category.domain.Category;
-import com.project.market_service.category.domain.CategoryRepository;
-import com.project.market_service.common.file.FileService;
+import com.project.market_service.common.application.port.out.FilePort;
+import com.project.market_service.common.redis.RedisManager;
 import com.project.market_service.common.security.jwt.JwtUserInfo;
 import com.project.market_service.config.IntegrationTestBase;
+import com.project.market_service.product.application.port.out.ProductPort;
 import com.project.market_service.product.domain.Product;
-import com.project.market_service.product.domain.ProductRepository;
 import com.project.market_service.product.domain.ProductStatus;
 import com.project.market_service.product.presentation.dto.ProductSaveRequest;
 import com.project.market_service.product.presentation.dto.ProductUpdateRequest;
 import com.project.market_service.product.presentation.dto.UpdateProductStatusRequest;
-import com.project.market_service.user.application.port.out.UserRepository;
+import com.project.market_service.user.application.port.out.UserPort;
 import com.project.market_service.user.domain.User;
 import com.project.market_service.user.domain.UserRole;
 import java.math.BigDecimal;
 import java.util.List;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,13 +48,15 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 class ProductControllerIntegrationTest extends IntegrationTestBase {
 
     @Autowired
-    private ProductRepository productRepository;
+    private ProductPort productPort;
     @Autowired
-    private UserRepository userRepository;
+    private UserPort userPort;
     @Autowired
-    private CategoryRepository categoryRepository;
+    private CategoryPort categoryPort;
+    @Autowired
+    private RedisManager redisManager;
     @MockitoBean
-    private FileService fileService;
+    private FilePort filePort;
 
     Long categoryId;
     Long productId;
@@ -61,14 +65,14 @@ class ProductControllerIntegrationTest extends IntegrationTestBase {
     @BeforeEach
     void setUp() throws Exception {
         User user = User.signUp("user_test", "user_test", "password1234!");
-        userRepository.save(user);
+        userPort.save(user);
         userId = user.getId();
 
         System.out.println("### DEBUG: Saved User ID = " + user.getId());
 
-        Category electronics = categoryRepository.save(Category.create("디지털기기"));
-        Category furniture = categoryRepository.save(Category.create("가구/인테리어"));
-        categoryRepository.saveAll(List.of(electronics, furniture));
+        Category electronics = categoryPort.save(Category.create("디지털기기"));
+        Category furniture = categoryPort.save(Category.create("가구/인테리어"));
+        categoryPort.saveAll(List.of(electronics, furniture));
         categoryId = electronics.getId();
 
         Point location = createPoint(120, 37);
@@ -77,7 +81,7 @@ class ProductControllerIntegrationTest extends IntegrationTestBase {
                 user, electronics, "상품", "쌉니다", new BigDecimal("10000"),
                 List.of("image1.png", "image2.png"), location, "풍무동"
         );
-        productRepository.save(product);
+        productPort.save(product);
         productId = product.getId();
 
         Product p1 = Product.create(user, electronics, "아이폰 15 프로", "거의 새거입니다.", new BigDecimal("1200000"),
@@ -92,7 +96,7 @@ class ProductControllerIntegrationTest extends IntegrationTestBase {
         Product p4 = Product.create(user, electronics, "맥북 에어 M2", "상태 최상입니다.", new BigDecimal("1300000"),
                 null, createPoint(127.0276, 37.4979), "서울 강남구 역삼동");
 
-        productRepository.saveAll(List.of(p1, p2, p3, p4));
+        productPort.saveAll(List.of(p1, p2, p3, p4));
 
         JwtUserInfo userInfo = new JwtUserInfo(userId, "user_test", UserRole.USER.getCode());
         Authentication auth = new UsernamePasswordAuthenticationToken(
@@ -122,7 +126,7 @@ class ProductControllerIntegrationTest extends IntegrationTestBase {
                 "test".getBytes()
         );
 
-        given(fileService.uploadProductImage(anyList()))
+        given(filePort.uploadProductImage(anyList()))
                 .willReturn(List.of("https://s3-mock-url.com/test.jpg"));
 
         mockMvc.perform(multipart("/api/v1/products")
@@ -262,4 +266,15 @@ class ProductControllerIntegrationTest extends IntegrationTestBase {
                 .andDo(print());
     }
 
+    @AfterEach
+    void tearDown() {
+
+        productPort.deleteAll();
+        categoryPort.deleteAll();
+        userPort.deleteAll();
+
+        redisManager.flushAll();
+
+        SecurityContextHolder.clearContext();
+    }
 }

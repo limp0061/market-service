@@ -1,11 +1,12 @@
-package com.project.market_service.product.infrastructure;
+package com.project.market_service.product.infrastructure.persistence;
 
 import static com.project.market_service.category.domain.QCategory.category;
 import static com.project.market_service.common.util.QuerydslUtils.getOrderSpecifier;
 import static com.project.market_service.product.domain.QProduct.product;
 import static com.project.market_service.user.domain.QUser.user;
 
-import com.project.market_service.product.domain.ProductRepositoryCustom;
+import com.project.market_service.product.application.port.out.ProductPort;
+import com.project.market_service.product.domain.Product;
 import com.project.market_service.product.domain.ProductStatus;
 import com.project.market_service.product.presentation.dto.ProductDetailResponse;
 import com.project.market_service.product.presentation.dto.ProductResponse;
@@ -16,21 +17,28 @@ import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberTemplate;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 @Repository
 @RequiredArgsConstructor
-public class ProductRepositoryImpl implements ProductRepositoryCustom {
+public class ProductPersistenceAdapter implements ProductPort {
 
+    private final JpaProductRepository jpaProductRepository;
     private final JPAQueryFactory queryFactory;
+    private final JdbcTemplate jdbcTemplate;
 
     @Override
     public Page<ProductResponse> searchProducts(ProductSearchRequest request, Pageable pageable) {
@@ -88,6 +96,21 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
                 .from(product)
                 .where(predicates);
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
+    }
+
+    @Override
+    public List<Product> saveAll(Iterable<Product> products) {
+        return jpaProductRepository.saveAll(products);
+    }
+
+    @Override
+    public void deleteAll() {
+        jpaProductRepository.deleteAll();
+    }
+
+    @Override
+    public void delete(Product product) {
+        jpaProductRepository.delete(product);
     }
 
     @Override
@@ -175,5 +198,48 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
     private boolean isDistanceSort(Pageable pageable) {
         return pageable.getSort().stream()
                 .anyMatch(order -> order.getProperty().equals("distance"));
+    }
+
+    @Override
+    public Optional<Product> findByIdWithLock(Long id) {
+        return jpaProductRepository.findByIdWithLock(id);
+    }
+
+    @Override
+    public void increaseWishCount(Long id) {
+        jpaProductRepository.increaseWishCount(id);
+    }
+
+    @Override
+    public void decreaseWishCount(Long id) {
+        jpaProductRepository.decreaseWishCount(id);
+    }
+
+    @Override
+    public Product save(Product product) {
+        return jpaProductRepository.save(product);
+    }
+
+    @Override
+    public Optional<Product> findById(Long id) {
+        return jpaProductRepository.findById(id);
+    }
+
+
+    @Override
+    @Transactional
+    public void batchUpdateViewCount(Map<Long, Long> viewCounts, int batchSize) {
+        if (viewCounts.isEmpty()) {
+            return;
+        }
+        List<Entry<Long, Long>> entries = new ArrayList<>(viewCounts.entrySet());
+        jdbcTemplate.batchUpdate("UPDATE products SET view_count = view_count + ? WHERE product_id = ?",
+                entries,
+                batchSize,
+                (ps, entry) -> {
+                    ps.setLong(1, entry.getValue());
+                    ps.setLong(2, entry.getKey());
+                }
+        );
     }
 }

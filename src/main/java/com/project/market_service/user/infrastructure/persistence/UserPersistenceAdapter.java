@@ -1,6 +1,6 @@
 package com.project.market_service.user.infrastructure.persistence;
 
-import com.project.market_service.user.application.port.out.UserRepository;
+import com.project.market_service.user.application.port.out.UserPort;
 import com.project.market_service.user.domain.User;
 import java.util.List;
 import java.util.Optional;
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-public class UserPersistenceAdapter implements UserRepository {
+public class UserPersistenceAdapter implements UserPort {
 
     private final JpaUserRepository jpaUserRepository;
 

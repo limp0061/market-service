@@ -1,6 +1,6 @@
 package com.project.market_service.auth.presentation;
 
-import com.project.market_service.auth.application.service.AuthService;
+import com.project.market_service.auth.application.port.in.AuthUseCase;
 import com.project.market_service.auth.presentation.dto.LoginRequest;
 import com.project.market_service.auth.presentation.dto.LoginResponse;
 import com.project.market_service.auth.presentation.dto.SignUpRequest;
@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthService authService;
+    private final AuthUseCase authUseCase;
 
     @Operation(summary = "회원가입",
             security = {}
@@ -40,7 +40,7 @@ public class AuthController {
     public ResponseEntity<ApiResult<SignUpResponse>> signUp(
             @Valid @RequestBody SignUpRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResult.success(authService.signUp(request)));
+                .body(ApiResult.success(authUseCase.signUp(request)));
     }
 
     @Operation(summary = "로그인",
@@ -52,7 +52,7 @@ public class AuthController {
             @Valid @RequestBody LoginRequest loginRequest
     ) {
         return ResponseEntity.ok().body(
-                ApiResult.success(authService.userLogin(loginRequest))
+                ApiResult.success(authUseCase.userLogin(loginRequest))
         );
     }
 
@@ -64,7 +64,7 @@ public class AuthController {
     ) {
         String token = JwtUtil.extractToken(request);
         return ResponseEntity.ok().body(
-                ApiResult.success(authService.reissue(token))
+                ApiResult.success(authUseCase.reissue(token))
         );
     }
 
@@ -79,7 +79,7 @@ public class AuthController {
             HttpServletRequest request
     ) {
         String token = JwtUtil.extractToken(request);
-        authService.logout(userInfo.userId(), token);
+        authUseCase.logout(userInfo.userId(), token);
         return ResponseEntity.ok().body(ApiResult.success(null));
     }
 

@@ -1,4 +1,4 @@
-package com.project.market_service.common.file;
+package com.project.market_service.common.constants;
 
 public final class FilePathConstants {
 

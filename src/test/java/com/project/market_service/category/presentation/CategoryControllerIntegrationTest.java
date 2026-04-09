@@ -10,7 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.project.market_service.auth.exception.AuthErrorCode;
 import com.project.market_service.category.domain.Category;
-import com.project.market_service.category.domain.CategoryRepository;
+import com.project.market_service.category.application.port.out.CategoryPort;
 import com.project.market_service.category.exception.CategoryErrorCode;
 import com.project.market_service.category.presentation.dto.CategorySaveRequest;
 import com.project.market_service.config.IntegrationTestBase;
@@ -24,7 +24,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 class CategoryControllerIntegrationTest extends IntegrationTestBase {
 
     @Autowired
-    private CategoryRepository categoryRepository;
+    private CategoryPort categoryPort;
 
     Long parentId;
     Long categoryId;
@@ -33,11 +33,11 @@ class CategoryControllerIntegrationTest extends IntegrationTestBase {
     void setUp() throws Exception {
 
         Category parent = Category.create("parent_product");
-        categoryRepository.save(parent);
+        categoryPort.save(parent);
         parentId = parent.getId();
 
         Category category = Category.create("test_product");
-        categoryRepository.save(category);
+        categoryPort.save(category);
         categoryId = category.getId();
 
         parent.addChildCategory(category);

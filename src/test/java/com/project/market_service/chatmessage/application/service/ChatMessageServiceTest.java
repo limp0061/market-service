@@ -7,12 +7,12 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
-import com.project.market_service.chatmessage.application.port.out.ChatMessageRepository;
+import com.project.market_service.chatmessage.application.port.out.ChatMessagePort;
 import com.project.market_service.chatmessage.domain.ChatMessage;
 import com.project.market_service.chatmessage.presentation.dto.ChatMessageRequest;
 import com.project.market_service.chatmessage.presentation.dto.ChatMessageResponse;
 import com.project.market_service.chatmessage.presentation.dto.ChatPagingRequest;
-import com.project.market_service.chatroom.application.port.out.ChatRoomUserRepository;
+import com.project.market_service.chatroom.application.port.out.ChatRoomUserPort;
 import com.project.market_service.chatroom.application.service.ChatRoomValidator;
 import com.project.market_service.user.application.port.in.UserUseCase;
 import java.util.List;
@@ -32,13 +32,13 @@ class ChatMessageServiceTest {
     UserUseCase userUseCase;
 
     @Mock
-    ChatMessageRepository chatMessageRepository;
+    ChatMessagePort chatMessagePort;
 
     @Mock
     ChatRoomValidator chatRoomValidator;
 
     @Mock
-    ChatRoomUserRepository chatRoomUserRepository;
+    ChatRoomUserPort chatRoomUserPort;
 
     @Mock
     SimpMessagingTemplate messagingTemplate;
@@ -56,7 +56,7 @@ class ChatMessageServiceTest {
         // 도메인 객체는 실제 객체를 생성해서 사용 (Mocking X)
         ChatMessage chatMessage = ChatMessage.create(roomId, userId, request.content());
 
-        given(chatMessageRepository.save(any(ChatMessage.class))).willReturn(chatMessage);
+        given(chatMessagePort.save(any(ChatMessage.class))).willReturn(chatMessage);
         given(userUseCase.getName(userId)).willReturn("홍길동");
 
         ArgumentCaptor<ChatMessageResponse> responseCaptor = ArgumentCaptor.forClass(ChatMessageResponse.class);
@@ -84,13 +84,13 @@ class ChatMessageServiceTest {
         Long userId = 1L;
         ChatPagingRequest request = new ChatPagingRequest(roomId, null, 10);
 
-        given(chatMessageRepository.findMessagesByRoomId(request)).willReturn(List.of());
+        given(chatMessagePort.findMessagesByRoomId(request)).willReturn(List.of());
 
         // when
         chatMessageService.getChatMessages(request, userId);
 
         // then
         then(chatRoomValidator).should().validateUserInRoom(roomId, userId); // 권한 체크 확인
-        then(chatRoomUserRepository).should().updateLastReadAt(roomId, userId); // 읽음 처리 확인
+        then(chatRoomUserPort).should().updateLastReadAt(roomId, userId); // 읽음 처리 확인
     }
 }

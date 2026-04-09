@@ -2,15 +2,17 @@ package com.project.market_service.product.application.service;
 
 import static com.project.market_service.common.util.GeoUtils.createPoint;
 
+import com.project.market_service.category.application.port.out.CategoryPort;
 import com.project.market_service.category.domain.Category;
-import com.project.market_service.category.domain.CategoryRepository;
 import com.project.market_service.category.exception.CategoryErrorCode;
+import com.project.market_service.common.application.port.out.FilePort;
 import com.project.market_service.common.exception.EntityNotFoundException;
-import com.project.market_service.common.file.FileService;
+import com.project.market_service.product.application.port.in.ProductUseCase;
+import com.project.market_service.product.application.port.in.ViewCountCache;
+import com.project.market_service.product.application.port.out.ProductImagePort;
+import com.project.market_service.product.application.port.out.ProductPort;
 import com.project.market_service.product.domain.Product;
 import com.project.market_service.product.domain.ProductImage;
-import com.project.market_service.product.domain.ProductImageRepository;
-import com.project.market_service.product.domain.ProductRepository;
 import com.project.market_service.product.exception.ProductErrorCode;
 import com.project.market_service.product.presentation.dto.ProductDetailResponse;
 import com.project.market_service.product.presentation.dto.ProductResponse;
@@ -20,13 +22,11 @@ import com.project.market_service.product.presentation.dto.ProductSearchRequest;
 import com.project.market_service.product.presentation.dto.ProductUpdateRequest;
 import com.project.market_service.product.presentation.dto.UpdateProductStatusRequest;
 import com.project.market_service.product.presentation.dto.UpdateProductStatusResponse;
-import com.project.market_service.user.application.port.out.UserRepository;
+import com.project.market_service.user.application.port.out.UserPort;
 import com.project.market_service.user.domain.User;
 import com.project.market_service.user.domain.UserErrorCode;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Point;
@@ -41,32 +41,33 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class ProductService {
+public class ProductService implements ProductUseCase {
 
-    private final UserRepository userRepository;
-    private final CategoryRepository categoryRepository;
-    private final FileService fileService;
-    private final ProductRepository productRepository;
-    private final ProductImageRepository productImageRepository;
-    private final ProductViewCountService productViewCountService;
+    private final UserPort userPort;
+    private final CategoryPort categoryPort;
+    private final FilePort filePort;
+    private final ProductPort productPort;
+    private final ProductImagePort productImagePort;
+    private final ViewCountCache viewCountCache;
     private final JdbcTemplate jdbcTemplate;
 
+    @Override
     @Transactional
     public ProductSaveResponse saveProduct(
             ProductSaveRequest request,
             List<MultipartFile> images,
             Long userId
     ) {
-        User user = userRepository.findById(userId)
+        User user = userPort.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException(UserErrorCode.USER_NOT_FOUND, "userId: " + userId));
 
-        Category category = categoryRepository.findById(request.categoryId())
+        Category category = categoryPort.findById(request.categoryId())
                 .orElseThrow(() -> new EntityNotFoundException(CategoryErrorCode.CATEGORY_NOT_FOUND,
                         "categoryId: " + request.categoryId()));
 
         List<String> imageUrls = (images == null || images.isEmpty())
                 ? List.of()
-                : fileService.uploadProductImage(images);
+                : filePort.uploadProductImage(images);
 
         Point location = createPoint(request.lng(), request.lat());
 
@@ -76,18 +77,19 @@ public class ProductService {
                 location, request.address()
         );
 
-        Product savedProduct = productRepository.save(product);
+        Product savedProduct = productPort.save(product);
 
         log.info("[Product Save Success] ProductId: {}, ProductName: {}", savedProduct.getId(), product.getName());
         return ProductSaveResponse.from(savedProduct);
     }
 
+    @Override
     @Transactional
     public ProductSaveResponse updateProduct(
             Long productId, ProductUpdateRequest request,
             List<MultipartFile> images, Long userId
     ) {
-        Product product = productRepository.findById(productId)
+        Product product = productPort.findById(productId)
                 .orElseThrow(
                         () -> new EntityNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND,
                                 "ProductId: " + productId));
@@ -97,14 +99,14 @@ public class ProductService {
 
         Category category = product.getCategory();
         if (!category.getId().equals(request.categoryId())) {
-            category = categoryRepository.findById(request.categoryId())
+            category = categoryPort.findById(request.categoryId())
                     .orElseThrow(() -> new EntityNotFoundException(CategoryErrorCode.CATEGORY_NOT_FOUND,
                             "CategoryId: " + request.categoryId()));
         }
 
         List<String> imageUrls = (images == null || images.isEmpty())
                 ? new ArrayList<>()
-                : fileService.uploadProductImage(images);
+                : filePort.uploadProductImage(images);
 
         if (request.remainingImages() != null && !imageUrls.isEmpty()) {
             imageUrls.addAll(request.remainingImages());
@@ -123,12 +125,13 @@ public class ProductService {
 
     public Page<ProductResponse> getProducts(ProductSearchRequest request, Pageable pageable) {
         log.debug("[Product Search] Request: {}, Page: {}", request, pageable);
-        return productRepository.searchProducts(request, pageable);
+        return productPort.searchProducts(request, pageable);
     }
 
+    @Override
     @Transactional
     public void deleteProduct(Long productId, Long userId) {
-        Product product = productRepository.findById(productId)
+        Product product = productPort.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
         product.validateOwner(userId);
@@ -140,11 +143,12 @@ public class ProductService {
         log.info("[Product Delete Success] ProductId: {}, ProductName: {}", productId, product.getName());
     }
 
+    @Override
     @Transactional
     public UpdateProductStatusResponse updateProductStatus(
             Long productId, UpdateProductStatusRequest request, Long userId
     ) {
-        Product product = productRepository.findById(productId)
+        Product product = productPort.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND,
                         "productId: " + productId));
 
@@ -157,40 +161,25 @@ public class ProductService {
         return UpdateProductStatusResponse.from(product);
     }
 
+    @Override
     @Transactional
     public ProductDetailResponse getProductDetail(Long productId, Double curLat, Double curLng, Long userId) {
         log.debug("[Product Detail] ProductId: {}, Location: {},{}", productId, curLat, curLng);
 
-        ProductDetailResponse product = productRepository.findWithDistinctById(productId, curLat, curLng)
+        ProductDetailResponse product = productPort.findWithDistinctById(productId, curLat, curLng)
                 .orElseThrow(() -> new EntityNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND));
 
-        List<String> images = productImageRepository.findByProductId(productId)
+        List<String> images = productImagePort.findByProductId(productId)
                 .stream()
                 .map(ProductImage::getImageUrl)
                 .toList();
 
         product.setImageUrls(images);
 
-        long viewCount = productViewCountService.increaseViewCount(product.getProductId(), userId);
+        long viewCount = viewCountCache.increaseViewCount(product.getProductId(), userId);
         product.setViewCount(product.getViewCount() + viewCount);
 
         return product;
-    }
-
-    @Transactional
-    public void batchUpdateViewCount(Map<Long, Long> viewCounts, int batchSize) {
-        if (viewCounts.isEmpty()) {
-            return;
-        }
-        List<Entry<Long, Long>> entries = new ArrayList<>(viewCounts.entrySet());
-        jdbcTemplate.batchUpdate("UPDATE products SET view_count = view_count + ? WHERE product_id = ?",
-                entries,
-                batchSize,
-                (ps, entry) -> {
-                    ps.setLong(1, entry.getValue());
-                    ps.setLong(2, entry.getKey());
-                }
-        );
     }
 }
 
